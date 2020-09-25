@@ -12,6 +12,7 @@
 # user-specific Xcode data
 /code/Managed Software Update/Managed Software Update.xcodeproj/*.mode1v3
 /code/Managed Software Update/Managed Software Update.xcodeproj/*.pbxuser
+*.perspectivev3
 
 # don't track .pyc files
 *.pyc
