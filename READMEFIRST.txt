@@ -1,8 +1,8 @@
 To get started with Munki, please see the wiki documentation at
-http://code.google.com/p/munki/wiki/
+https://code.google.com/archive/p/munki/wikis
 
 Especially:
-http://code.google.com/p/munki/wiki/GettingStartedWithMunki
+http://web.archive.org/web/20160123094446/http://code.google.com/p/munki/wiki/GettingStartedWithMunki
 
 and:
-http://code.google.com/p/munki/wiki/DemonstrationSetup
+https://code.google.com/archive/p/munki/wikis/DemonstrationSetup.wiki
