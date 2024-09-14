@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# encoding: utf-8
 #
 # Copyright 2009-2011 Greg Neagle.
 #
@@ -116,6 +115,7 @@ def set_file_nonblock(f, non_blocking=True):
 class Popen(subprocess.Popen):
     '''Subclass of subprocess.Popen to add support for
     timeouts for some operations.'''
+
     def timed_readline(self, f, timeout):
         """Perform readline-like operation with timeout.
 
@@ -299,7 +299,7 @@ def concat_log_message(msg, *args):
         except TypeError, unused_err:
             warnings.warn(
                 'String format does not match concat args: %s' % (
-                str(sys.exc_info())))
+                    str(sys.exc_info())))
     return msg.rstrip()
 
 
@@ -315,7 +315,7 @@ def display_status_major(msg, *args):
         munkistatus.detail('')
         munkistatus.percent(-1)
     elif verbose > 0:
-        if msg.endswith('.') or msg.endswith(u'…'):
+        if msg.endswith('.') or msg.endswith('…'):
             print '%s' % msg.encode('UTF-8')
         else:
             print '%s...' % msg.encode('UTF-8')
@@ -328,11 +328,11 @@ def display_status_minor(msg, *args):
     for verbose/non-verbose and munkistatus-style output.
     """
     msg = concat_log_message(msg, *args)
-    log(u'    ' + msg)
+    log('    ' + msg)
     if munkistatusoutput:
         munkistatus.detail(msg)
     elif verbose > 0:
-        if msg.endswith('.') or msg.endswith(u'…'):
+        if msg.endswith('.') or msg.endswith('…'):
             print '    %s' % msg.encode('UTF-8')
         else:
             print '    %s...' % msg.encode('UTF-8')
@@ -345,7 +345,7 @@ def display_info(msg, *args):
     Not displayed in MunkiStatus.
     """
     msg = concat_log_message(msg, *args)
-    log(u'    ' + msg)
+    log('    ' + msg)
     if munkistatusoutput:
         pass
     elif verbose > 0:
@@ -367,7 +367,7 @@ def display_detail(msg, *args):
         print '    %s' % msg.encode('UTF-8')
         sys.stdout.flush()
     if pref('LoggingLevel') > 0:
-        log(u'    ' + msg)
+        log('    ' + msg)
 
 
 def display_debug1(msg, *args):
@@ -402,7 +402,7 @@ def display_debug2(msg, *args):
 def reset_warnings():
     """Rotate our warnings log."""
     warningsfile = os.path.join(os.path.dirname(pref('LogFile')),
-                                                'warnings.log')
+                                'warnings.log')
     if os.path.exists(warningsfile):
         rotatelog(warningsfile)
 
@@ -526,7 +526,7 @@ def saveappdata():
         app_inventory.append(inventory_item)
 
     FoundationPlist.writePlist(app_inventory,
-        os.path.join(pref('ManagedInstallDir'), 'ApplicationInventory.plist'))
+                               os.path.join(pref('ManagedInstallDir'), 'ApplicationInventory.plist'))
 
 
 def printreportitem(label, value, indent=0):
@@ -559,7 +559,7 @@ def printreport(reportdict):
 def savereport():
     """Save our report"""
     FoundationPlist.writePlist(report,
-        os.path.join(pref('ManagedInstallDir'), 'ManagedInstallReport.plist'))
+                               os.path.join(pref('ManagedInstallDir'), 'ManagedInstallReport.plist'))
 
 
 def readreport():
@@ -581,8 +581,8 @@ def archive_report():
         modtime = os.stat(reportfile).st_mtime
         formatstr = '%Y-%m-%d-%H%M%S'
         archivename = 'ManagedInstallReport-' + \
-                      time.strftime(formatstr,time.localtime(modtime)) + \
-                       '.plist'
+                      time.strftime(formatstr, time.localtime(modtime)) + \
+            '.plist'
         archivepath = os.path.join(pref('ManagedInstallDir'), 'Archives')
         if not os.path.exists(archivepath):
             try:
@@ -610,8 +610,7 @@ def archive_report():
                             os.unlink(itempath)
                         except (OSError, IOError):
                             display_warning('Could not remove archive item %s'
-                                             % itempath)
-
+                                            % itempath)
 
 
 # misc functions
@@ -619,7 +618,7 @@ def archive_report():
 def validPlist(path):
     """Uses plutil to determine if path contains a valid plist.
     Returns True or False."""
-    retcode = subprocess.call(['/usr/bin/plutil', '-lint', '-s' , path])
+    retcode = subprocess.call(['/usr/bin/plutil', '-lint', '-s', path])
     if retcode == 0:
         return True
     else:
@@ -639,7 +638,7 @@ def stopRequested():
 def getconsoleuser():
     """Return console user"""
     from SystemConfiguration import SCDynamicStoreCopyConsoleUser
-    cfuser = SCDynamicStoreCopyConsoleUser( None, None, None )
+    cfuser = SCDynamicStoreCopyConsoleUser(None, None, None)
     return cfuser[0]
 
 
@@ -679,7 +678,7 @@ def pythonScriptRunning(scriptname):
             try:
                 # first look for Python processes
                 if (args[0].find('MacOS/Python') != -1 or
-                    args[0].find('python') != -1):
+                        args[0].find('python') != -1):
                     # look for first argument being scriptname
                     if args[1].find(scriptname) != -1:
                         try:
@@ -737,8 +736,8 @@ def DMGhasSLA(dmgpath):
     These dmgs normally cannot be attached without user intervention'''
     hasSLA = False
     proc = subprocess.Popen(
-                ['/usr/bin/hdiutil', 'imageinfo', dmgpath, '-plist'],
-                bufsize=-1, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ['/usr/bin/hdiutil', 'imageinfo', dmgpath, '-plist'],
+        bufsize=-1, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (out, err) = proc.communicate()
     if err:
         print >> sys.stderr, (
@@ -770,7 +769,7 @@ def mountdmg(dmgpath, use_shadow=False):
         display_detail(
             'NOTE: %s has embedded Software License Agreement' % dmgname)
     cmd = ['/usr/bin/hdiutil', 'attach', dmgpath,
-                '-mountRandom', '/tmp', '-nobrowse', '-plist']
+           '-mountRandom', '/tmp', '-nobrowse', '-plist']
     if use_shadow:
         cmd.append('-shadow')
     proc = subprocess.Popen(cmd,
@@ -799,15 +798,15 @@ def unmountdmg(mountpoint):
     Unmounts the dmg at mountpoint
     """
     proc = subprocess.Popen(['/usr/bin/hdiutil', 'detach', mountpoint],
-                                bufsize=1, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
+                            bufsize=1, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
     (unused_output, err) = proc.communicate()
     if proc.returncode:
         display_warning('Polite unmount failed: %s' % err)
         display_info('Attempting to force unmount %s' % mountpoint)
         # try forcing the unmount
         retcode = subprocess.call(['/usr/bin/hdiutil', 'detach', mountpoint,
-                                '-force'])
+                                   '-force'])
         if retcode:
             display_warning('Failed to unmount %s' % mountpoint)
 
@@ -872,7 +871,7 @@ def isApplication(pathname):
             # get CFBundleExecutable,
             # falling back to bundle name if it's missing
             bundleexecutable = plist.get('CFBundleExecutable',
-                                      os.path.basename(pathname))
+                                         os.path.basename(pathname))
             bundleexecutablepath = os.path.join(pathname, 'Contents',
                                                 'MacOS', bundleexecutable)
             if os.path.exists(bundleexecutablepath):
@@ -948,14 +947,15 @@ def pref(pref_name):
 # Apple package utilities
 #####################################################
 
+
 def getInstallerPkgInfo(filename):
     """Uses Apple's installer tool to get basic info
     about an installer item."""
     installerinfo = {}
     proc = subprocess.Popen(['/usr/sbin/installer', '-pkginfo', '-verbose',
                              '-plist', '-pkg', filename],
-                             bufsize=1, stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+                            bufsize=1, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
     (out, unused_err) = proc.communicate()
 
     if out:
@@ -965,7 +965,7 @@ def getInstallerPkgInfo(filename):
         for index in range(len(lines)):
             try:
                 plist = FoundationPlist.readPlistFromString(
-                                                '\n'.join(lines[index:]) )
+                    '\n'.join(lines[index:]))
             except FoundationPlist.NSPropertyListSerializationException:
                 pass
             if plist:
@@ -982,9 +982,9 @@ def getInstallerPkgInfo(filename):
     proc = subprocess.Popen(['/usr/sbin/installer',
                              '-query', 'RestartAction',
                              '-pkg', filename],
-                             bufsize=1,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+                            bufsize=1,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
     (out, err) = proc.communicate()
     if proc.returncode:
         display_error("installer -query failed: %s %s" %
@@ -1003,7 +1003,7 @@ class MunkiLooseVersion (version.LooseVersion):
     '''Subclass version.LooseVersion to compare things like
     "10.6" and "10.6.0" as equal'''
 
-    def __init__ (self, vstring=None):
+    def __init__(self, vstring=None):
         if vstring is None:
             # treat None like an empty string
             self.parse('')
@@ -1015,11 +1015,11 @@ class MunkiLooseVersion (version.LooseVersion):
         components to the end if needed"""
         # copy the version_list so we don't modify it
         cmp_list = list(version_list)
-        while len(cmp_list) < max_length :
+        while len(cmp_list) < max_length:
             cmp_list.append(0)
         return (cmp_list)
 
-    def __cmp__ (self, other):
+    def __cmp__(self, other):
         if isinstance(other, StringType):
             other = MunkiLooseVersion(other)
 
@@ -1035,10 +1035,10 @@ def padVersionString(versString, tupleCount):
     if versString == None:
         versString = '0'
     components = str(versString).split('.')
-    if len(components) > tupleCount :
+    if len(components) > tupleCount:
         components = components[0:tupleCount]
     else:
-        while len(components) < tupleCount :
+        while len(components) < tupleCount:
             components.append('0')
     return '.'.join(components)
 
@@ -1061,7 +1061,7 @@ def getVersionString(plist):
             # now for another edge case thanks to Adobe:
             # replace commas with periods
             CFBundleShortVersionString = \
-                CFBundleShortVersionString.replace(',','.')
+                CFBundleShortVersionString.replace(',', '.')
             return CFBundleShortVersionString
     if plist.get('CFBundleVersion'):
         # no CFBundleShortVersionString, or bad one
@@ -1070,7 +1070,7 @@ def getVersionString(plist):
             # starts with a number; that's good
             # now for another edge case thanks to Adobe:
             # replace commas with periods
-            CFBundleVersion = CFBundleVersion.replace(',','.')
+            CFBundleVersion = CFBundleVersion.replace(',', '.')
             return CFBundleVersion
 
     return ''
@@ -1090,7 +1090,7 @@ def getExtendedVersion(bundlepath):
 
     # no version number in Info.plist. Maybe old-style package?
     infopath = os.path.join(bundlepath, 'Contents', 'Resources',
-                                'English.lproj')
+                            'English.lproj')
     if os.path.exists(infopath):
         for item in listdir(infopath):
             if os.path.join(infopath, item).endswith('.info'):
@@ -1122,7 +1122,7 @@ def parsePkgRefs(filename, path_to_pkg=None):
             if 'identifier' in keys and 'version' in keys:
                 pkginfo = {}
                 pkginfo['packageid'] = \
-                       ref.attributes['identifier'].value.encode('UTF-8')
+                    ref.attributes['identifier'].value.encode('UTF-8')
                 pkginfo['version'] = \
                     ref.attributes['version'].value.encode('UTF-8')
                 payloads = ref.getElementsByTagName('payload')
@@ -1150,7 +1150,7 @@ def parsePkgRefs(filename, path_to_pkg=None):
                     if 'installKBytes' in keys:
                         pkgref_dict[pkgid]['installed_size'] = int(
                             ref.attributes['installKBytes'].value.encode(
-                                                                   'UTF-8'))
+                                'UTF-8'))
                     if ref.firstChild:
                         text = ref.firstChild.wholeText
                         if text.endswith('.pkg'):
@@ -1169,7 +1169,7 @@ def parsePkgRefs(filename, path_to_pkg=None):
                                 thisdir = os.path.dirname(filename)
                                 pkgref_dict[pkgid]['file'] = os.path.join(
                                     thisdir, relativepath)
-                                
+
             for key in pkgref_dict.keys():
                 pkgref = pkgref_dict[key]
                 if 'file' in pkgref:
@@ -1180,7 +1180,7 @@ def parsePkgRefs(filename, path_to_pkg=None):
                     if 'file' in pkgref:
                         del pkgref['file']
                     info.append(pkgref_dict[key])
-                    
+
     return info
 
 
@@ -1280,18 +1280,18 @@ def getOnePackageInfo(pkgpath):
         except (AttributeError,
                 FoundationPlist.NSPropertyListSerializationException):
             pkginfo['packageid'] = 'BAD PLIST in %s' % \
-                                    os.path.basename(pkgpath)
+                os.path.basename(pkgpath)
             pkginfo['version'] = '0.0'
-        ## now look for applications to suggest for blocking_applications
-        #bomlist = getBomList(pkgpath)
-        #if bomlist:
+        # now look for applications to suggest for blocking_applications
+        # bomlist = getBomList(pkgpath)
+        # if bomlist:
         #    pkginfo['apps'] = [os.path.basename(item) for item in bomlist
         #                        if item.endswith('.app')]
 
     else:
         # look for old-style .info files!
         infopath = os.path.join(pkgpath, 'Contents', 'Resources',
-                                    'English.lproj')
+                                'English.lproj')
         if os.path.exists(infopath):
             for item in listdir(infopath):
                 if os.path.join(infopath, item).endswith('.info'):
@@ -1393,9 +1393,9 @@ def getInstalledPackageVersion(pkgid):
     # First check (Leopard and later) package database
     proc = subprocess.Popen(['/usr/sbin/pkgutil',
                              '--pkg-info-plist', pkgid],
-                             bufsize=1,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+                            bufsize=1,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
     (out, unused_err) = proc.communicate()
 
     if out:
@@ -1408,7 +1408,7 @@ def getInstalledPackageVersion(pkgid):
             foundvers = plist.get('pkg-version', '0.0.0.0.0')
             if pkgid == foundbundleid:
                 display_debug2('\tThis machine has %s, version %s' %
-                                (pkgid, foundvers))
+                               (pkgid, foundvers))
                 return foundvers
 
     # If we got to this point, we haven't found the pkgid yet.
@@ -1431,9 +1431,8 @@ def getInstalledPackageVersion(pkgid):
 
         if highestversion != '0':
             display_debug2('\tThis machine has %s, version %s' %
-                            (pkgid, highestversion))
+                           (pkgid, highestversion))
             return highestversion
-
 
     # This package does not appear to be currently installed
     display_debug2('\tThis machine does not have %s' % pkgid)
@@ -1487,11 +1486,10 @@ def nameAndVersion(aString):
         return (aString, '')
 
 
-
 def isInstallerItem(path):
     """Verifies we have an installer item"""
     if (path.endswith('.pkg') or path.endswith('.mpkg') or
-        path.endswith('.dmg') or path.endswith('.dist')):
+            path.endswith('.dmg') or path.endswith('.dist')):
         return True
     else:
         return False
@@ -1536,7 +1534,7 @@ def getPackageMetaData(pkgitem):
     installedsize = 0
     for infoitem in receiptinfo:
         if (MunkiLooseVersion(infoitem['version']) >
-            MunkiLooseVersion(highestpkgversion)):
+                MunkiLooseVersion(highestpkgversion)):
             highestpkgversion = infoitem['version']
             if 'installed_size' in infoitem:
                 # note this is in KBytes
@@ -1655,15 +1653,15 @@ def getFilesystems():
     for i in xrange(0, n):
         if mode == 64:
             (f_bsize, f_iosize, f_blocks, f_bfree, f_bavail, f_files,
-            f_ffree, f_fsid_0, f_fsid_1, f_owner, f_type, f_flags,
-            f_fssubtype,
-            f_fstypename, f_mntonname, f_mntfromname) = struct.unpack(
-              statfs_struct, str(buf[ofs:ofs+sizeof_statfs_struct]))
+             f_ffree, f_fsid_0, f_fsid_1, f_owner, f_type, f_flags,
+             f_fssubtype,
+             f_fstypename, f_mntonname, f_mntfromname) = struct.unpack(
+                statfs_struct, str(buf[ofs:ofs+sizeof_statfs_struct]))
         elif mode == 32:
             (f_otype, f_oflags, f_bsize, f_iosize, f_blocks, f_bfree, f_bavail,
-            f_files, f_ffree, f_fsid, f_owner, f_reserved1, f_type, f_flags,
-            f_reserved2_0, f_reserved2_1, f_fstypename, f_mntonname,
-            f_mntfromname) = struct.unpack(
+             f_files, f_ffree, f_fsid, f_owner, f_reserved1, f_type, f_flags,
+             f_reserved2_0, f_reserved2_1, f_fstypename, f_mntonname,
+             f_mntfromname) = struct.unpack(
                 statfs_struct, str(buf[ofs:ofs+sizeof_statfs_struct]))
 
         try:
@@ -1673,7 +1671,7 @@ def getFilesystems():
                 'f_fstypename': _asciizToStr(f_fstypename),
                 'f_mntonname': _asciizToStr(f_mntonname),
                 'f_mntfromname': _asciizToStr(f_mntfromname),
-                }
+            }
         except OSError:
             pass
 
@@ -1683,6 +1681,8 @@ def getFilesystems():
 
 
 FILESYSTEMS = {}
+
+
 def isExcludedFilesystem(path, _retry=False):
     """Gets filesystem information for a path and determine if it should be
     excluded from application searches.
@@ -1717,7 +1717,7 @@ def isExcludedFilesystem(path, _retry=False):
             return None
 
     exc_flags = ('read-only' in FILESYSTEMS[st.st_dev]['f_flags_set'] or
-        'local' not in FILESYSTEMS[st.st_dev]['f_flags_set'])
+                 'local' not in FILESYSTEMS[st.st_dev]['f_flags_set'])
     is_nfs = FILESYSTEMS[st.st_dev]['f_fstypename'] == 'nfs'
 
     if is_nfs or exc_flags:
@@ -1735,7 +1735,7 @@ def findAppsInDirs(dirlist):
     applist = []
     query = NSMetadataQuery.alloc().init()
     query.setPredicate_(NSPredicate.predicateWithFormat_(
-                                    '(kMDItemKind = "Application")'))
+        '(kMDItemKind = "Application")'))
     query.setSearchScopes_(dirlist)
     query.startQuery()
     # Spotlight isGathering phase - this is the initial search. After the
@@ -1747,13 +1747,13 @@ def findAppsInDirs(dirlist):
     while query.isGathering() and runtime <= maxruntime:
         runtime += 0.3
         NSRunLoop.currentRunLoop().runUntilDate_(
-                                   NSDate.dateWithTimeIntervalSinceNow_(0.3))
+            NSDate.dateWithTimeIntervalSinceNow_(0.3))
     query.stopQuery()
 
     if runtime >= maxruntime:
         display_warning('Spotlight search for applications terminated due to '
-              'excessive time. Possible causes: Spotlight indexing is turned '
-              'off for a volume; Spotlight is reindexing a volume.')
+                        'excessive time. Possible causes: Spotlight indexing is turned '
+                        'off for a volume; Spotlight is reindexing a volume.')
 
     for item in query.results():
         p = item.valueForAttribute_('kMDItemPath')
@@ -1776,11 +1776,11 @@ def getSpotlightInstalledApplications():
     dirlist = []
     applist = []
 
-    for f in listdir(u'/'):
+    for f in listdir('/'):
         if not f in skipdirs:
-            p = os.path.join(u'/', f)
+            p = os.path.join('/', f)
             if os.path.isdir(p) and not os.path.islink(p) \
-                                and not isExcludedFilesystem(p):
+                    and not isExcludedFilesystem(p):
                 if f.endswith('.app'):
                     applist.append(p)
                 else:
@@ -1788,14 +1788,14 @@ def getSpotlightInstalledApplications():
 
     # Future code changes may mean we wish to look for Applications
     # installed on any r/w local volume.
-    #for f in listdir(u'/Volumes'):
+    # for f in listdir(u'/Volumes'):
     #    p = os.path.join(u'/Volumes', f)
     #    if os.path.isdir(p) and not os.path.islink(p) \
     #                        and not isExcludedFilesystem(p):
     #        dirlist.append(p)
 
     # /Users is not currently excluded, so no need to add /Users/Shared.
-    #dirlist.append(u'/Users/Shared')
+    # dirlist.append(u'/Users/Shared')
 
     applist.extend(findAppsInDirs(dirlist))
     return applist
@@ -1815,14 +1815,17 @@ def getLSInstalledApplications():
             continue
         app_path = fsobj.as_pathname()
         if (app_path and not app_path.startswith('/Volumes/') and not
-            isExcludedFilesystem(app_path)):
+                isExcludedFilesystem(app_path)):
             applist.append(app_path)
 
     return applist
 
+
 # we save APPDATA in a global to avoid querying LaunchServices more than
 # once per session
 APPDATA = []
+
+
 def getAppData():
     """Gets info on currently installed apps.
     Returns a list of dicts containing path, name, version and bundleid"""
@@ -1838,7 +1841,7 @@ def getAppData():
             if os.path.exists(plistpath):
                 try:
                     plist = FoundationPlist.readPlist(plistpath)
-                    iteminfo['bundleid' ] = plist.get('CFBundleIdentifier','')
+                    iteminfo['bundleid'] = plist.get('CFBundleIdentifier', '')
                     if 'CFBundleName' in plist:
                         iteminfo['name'] = plist['CFBundleName']
                     iteminfo['version'] = getExtendedVersion(pathname)
@@ -1927,6 +1930,8 @@ def get_ipv4_addresses():
 
 
 MACHINE = {}
+
+
 def getMachineFacts():
     """Gets some facts about this machine we use to determine if a given
     installer is applicable to this OS or hardware"""
@@ -1935,13 +1940,16 @@ def getMachineFacts():
         MACHINE['arch'] = os.uname()[4]
         MACHINE['os_vers'] = getOsVersion(only_major_minor=False)
         hardware_info = get_hardware_info()
-        MACHINE['machine_model'] = hardware_info.get('machine_model', 'UNKNOWN')
+        MACHINE['machine_model'] = hardware_info.get(
+            'machine_model', 'UNKNOWN')
         MACHINE['munki_version'] = get_version()
         MACHINE['ipv4_address'] = get_ipv4_addresses()
     return MACHINE
 
 
 CONDITIONS = {}
+
+
 def getConditions():
     """Fetches key/value pairs from condition scripts
     which can be placed into /usr/local/munki/conditions"""
@@ -1951,7 +1959,8 @@ def getConditions():
         scriptdir = os.path.realpath(os.path.dirname(sys.argv[0]))
         conditionalscriptdir = os.path.join(scriptdir, "conditions")
         # define path to ConditionalItems.plist
-        conditionalitemspath = os.path.join(pref('ManagedInstallDir'), 'ConditionalItems.plist')
+        conditionalitemspath = os.path.join(
+            pref('ManagedInstallDir'), 'ConditionalItems.plist')
         try:
             # delete CondtionalItems.plist so that we're starting fresh
             os.unlink(conditionalitemspath)
@@ -1963,20 +1972,22 @@ def getConditions():
                 if conditionalscript.startswith('.'):
                     # skip files that start with a period
                     continue
-                conditionalscriptpath = os.path.join(conditionalscriptdir, conditionalscript)
+                conditionalscriptpath = os.path.join(
+                    conditionalscriptdir, conditionalscript)
                 if os.path.isdir(conditionalscriptpath):
                     # skip directories in conditions directory
                     continue
                 try:
                     # attempt to execute condition script
-                    result, stdout, stderr = utils.runExternalScript(conditionalscriptpath)
+                    result, stdout, stderr = utils.runExternalScript(
+                        conditionalscriptpath)
                 except utils.ScriptNotFoundError:
                     pass  # script is not required, so pass
                 except utils.RunExternalScriptError, e:
                     print >> sys.stderr, str(e)
         else:
             # /usr/local/munki/conditions does not exist
-            pass    
+            pass
         if os.path.exists(conditionalitemspath) and validPlist(conditionalitemspath):
             # import conditions into CONDITIONS dict
             CONDITIONS = FoundationPlist.readPlist(conditionalitemspath)
@@ -1996,7 +2007,7 @@ def isAppRunning(appname):
     if appname.endswith('.app'):
         # search by filename
         matching_items = [item for item in proc_list
-                          if '/'+ appname + '/' in item]
+                          if '/' + appname + '/' in item]
     else:
         # check executable name
         matching_items = [item for item in proc_list
@@ -2004,7 +2015,7 @@ def isAppRunning(appname):
     if not matching_items:
         # try adding '.app' to the name and check again
         matching_items = [item for item in proc_list
-                          if '/'+ appname + '.app/' in item]
+                          if '/' + appname + '.app/' in item]
 
     if matching_items:
         # it's running!
@@ -2033,7 +2044,8 @@ def getAvailableDiskSpace(volumepath='/'):
             'Error getting disk space in %s: %s', volumepath, str(e))
         return 0
 
-    return int(st.f_frsize * st.f_bavail / 1024) # f_bavail matches df(1) output
+    # f_bavail matches df(1) output
+    return int(st.f_frsize * st.f_bavail / 1024)
 
 
 def cleanUpTmpDir():
@@ -2115,15 +2127,14 @@ def findProcesses(user=None, exe=None):
                 if p_user != user:
                     continue
             pids[int(p_pid)] = {
-                    'user': p_user,
-                    'exe': p_comm,
+                'user': p_user,
+                'exe': p_comm,
             }
 
     except (ValueError, TypeError, IndexError):
         return pids
 
     return pids
-
 
 
 def forceLogoutNow():
@@ -2135,7 +2146,7 @@ def forceLogoutNow():
             users[procs[pid]['user']] = pid
 
         if 'root' in users:
-            del(users['root'])
+            del (users['root'])
 
         # force MSU GUI to raise
         f = open('/private/tmp/com.googlecode.munki.installatlogout', 'w')
@@ -2154,16 +2165,17 @@ def forceLogoutNow():
 
 
 # module globals
-#debug = False
+# debug = False
 verbose = 1
 munkistatusoutput = False
 tmpdir = tempfile.mkdtemp()
 report = {}
 
+
 def main():
     """Placeholder"""
     print 'This is a library of support tools for the Munki Suite.'
 
+
 if __name__ == '__main__':
     main()
-

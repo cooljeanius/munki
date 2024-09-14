@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# encoding: utf-8
 #
 # Copyright 2009-2011 Greg Neagle.
 #
@@ -124,8 +123,8 @@ def runExternalScript(script, allow_insecure=False, script_args=()):
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
         (stdout, stderr) = proc.communicate()
-        return proc.returncode, stdout.decode('UTF-8','replace'), \
-                                stderr.decode('UTF-8','replace')
+        return proc.returncode, stdout.decode('UTF-8', 'replace'), \
+            stderr.decode('UTF-8', 'replace')
     else:
         raise RunExternalScriptError('%s not executable' % script)
 
@@ -141,7 +140,7 @@ def getPIDforProcessName(processname):
         return 0
 
     while True:
-        line =  proc.stdout.readline().decode('UTF-8')
+        line = proc.stdout.readline().decode('UTF-8')
         if not line and (proc.poll() != None):
             break
         line = line.rstrip('\n')

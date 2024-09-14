@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# encoding: utf-8
 #
 # Copyright 2009-2011 Greg Neagle.
 #
@@ -21,7 +20,7 @@ Created by Greg Neagle on 2011-09-29.
 
 """
 
-#standard libs
+# standard libs
 import calendar
 import errno
 import os
@@ -33,9 +32,9 @@ import urllib2
 import urlparse
 import xattr
 
-#our libs
+# our libs
 import munkicommon
-#import munkistatus
+# import munkistatus
 
 
 # XATTR name storing the ETAG of the file when downloaded via http(s).
@@ -47,21 +46,26 @@ XATTR_SHA = 'com.googlecode.munki.sha256'
 class CurlError(Exception):
     pass
 
+
 class HTTPError(Exception):
     pass
+
 
 class MunkiDownloadError(Exception):
     """Base exception for download errors"""
     pass
 
+
 class CurlDownloadError(MunkiDownloadError):
     """Curl failed to download the item"""
     pass
 
+
 class FileCopyError(MunkiDownloadError):
     """Download failed because of file copy errors."""
     pass
-    
+
+
 class PackageVerificationError(MunkiDownloadError):
     """Package failed verification"""
     pass
@@ -88,6 +92,8 @@ def writeCachedChecksum(file_path, fhash=None):
 
 
 WARNINGSLOGGED = {}
+
+
 def curl(url, destinationpath,
          cert_info=None, custom_headers=None, donotrecurse=False, etag=None,
          message=None, onlyifnewer=False, resume=False, follow_redirects=False):
@@ -122,15 +128,15 @@ def curl(url, destinationpath,
         print >> fileobj, 'no-buffer'       # don't buffer output
         print >> fileobj, 'fail'            # throw error if download fails
         print >> fileobj, 'dump-header -'   # dump headers to stdout
-        print >> fileobj, 'speed-time = 30' # give up if too slow d/l
+        print >> fileobj, 'speed-time = 30'  # give up if too slow d/l
         print >> fileobj, 'output = "%s"' % tempdownloadpath
-        print >> fileobj, 'ciphers = HIGH,!ADH' #use only secure >=128 bit SSL
+        print >> fileobj, 'ciphers = HIGH,!ADH'  # use only secure >=128 bit SSL
         print >> fileobj, 'url = "%s"' % url
-        
+
         munkicommon.display_debug2('follow_redirects is %s', follow_redirects)
         if follow_redirects:
             print >> fileobj, 'location'    # follow redirects
-        
+
         if cert_info:
             cacert = cert_info.get('cacert')
             capath = cert_info.get('capath')
@@ -155,9 +161,9 @@ def curl(url, destinationpath,
 
         if os.path.exists(destinationpath):
             if etag:
-                escaped_etag = etag.replace('"','\\"')
+                escaped_etag = etag.replace('"', '\\"')
                 print >> fileobj, ('header = "If-None-Match: %s"'
-                                                        % escaped_etag)
+                                   % escaped_etag)
             elif onlyifnewer:
                 print >> fileobj, 'time-cond = "%s"' % destinationpath
             else:
@@ -172,9 +178,9 @@ def curl(url, destinationpath,
                 if tempetag:
                     # Note: If-Range is more efficient, but the response
                     # confuses curl (Error: 33 if etag not match).
-                    escaped_etag = tempetag.replace('"','\\"')
+                    escaped_etag = tempetag.replace('"', '\\"')
                     print >> fileobj, ('header = "If-Match: %s"'
-                                        % escaped_etag)
+                                       % escaped_etag)
             else:
                 os.remove(tempdownloadpath)
 
@@ -195,9 +201,9 @@ def curl(url, destinationpath,
         raise CurlError(-5, 'Error writing curl directive: %s' % str(e))
 
     cmd = ['/usr/bin/curl',
-            '-q',                    # don't read .curlrc file
-            '--config',              # use config file
-            curldirectivepath]
+           '-q',                    # don't read .curlrc file
+           '--config',              # use config file
+           curldirectivepath]
 
     proc = subprocess.Popen(cmd, shell=False, bufsize=1,
                             stdin=subprocess.PIPE,
@@ -231,11 +237,11 @@ def curl(url, destinationpath,
                 else:
                     donewithheaders = True
                     try:
-                        # Prefer Content-Length header to determine download 
-                        # size, otherwise fall back to a custom X-Download-Size 
+                        # Prefer Content-Length header to determine download
+                        # size, otherwise fall back to a custom X-Download-Size
                         # header.
                         # This is primary for servers that use chunked transfer
-                        # encoding, when Content-Length is forbidden by 
+                        # encoding, when Content-Length is forbidden by
                         # RFC2616 4.4. An example of such a server is
                         # Google App Engine Blobstore.
                         targetsize = (
@@ -248,7 +254,7 @@ def curl(url, destinationpath,
                         # partial content because we're resuming
                         munkicommon.display_detail(
                             'Resuming partial download for %s' %
-                                            os.path.basename(destinationpath))
+                            os.path.basename(destinationpath))
                         contentrange = header.get('content-range')
                         if contentrange.startswith('bytes'):
                             try:
@@ -267,7 +273,7 @@ def curl(url, destinationpath,
             if os.path.exists(tempdownloadpath):
                 downloadedsize = os.path.getsize(tempdownloadpath)
                 percent = int(float(downloadedsize)
-                                    /float(targetsize)*100)
+                              / float(targetsize)*100)
                 if percent != downloadedpercent:
                     # percent changed; update display
                     downloadedpercent = percent
@@ -309,15 +315,15 @@ def curl(url, destinationpath,
                     # don't get reported but are available in the log
                     # and in command-line output
                     munkicommon.display_info('WARNING: Web server refused '
-                            'partial/range request. Munki cannot run '
-                            'efficiently when this support is absent for '
-                            'pkg urls. URL: %s' % url)
+                                             'partial/range request. Munki cannot run '
+                                             'efficiently when this support is absent for '
+                                             'pkg urls. URL: %s' % url)
                     WARNINGSLOGGED['HTTPRange'] = 1
                 os.remove(tempdownloadpath)
                 # The partial failed immediately as not supported.
                 # Try a full download again immediately.
                 if not donotrecurse:
-                    return curl(url, destinationpath, 
+                    return curl(url, destinationpath,
                                 cert_info=cert_info,
                                 custom_headers=custom_headers,
                                 donotrecurse=True,
@@ -356,20 +362,20 @@ def curl(url, destinationpath,
         # the place where this exception is caught has to be done in many
         # places.
         munkicommon.display_detail('Download error: %s. Failed (%s) with: %s'
-                                    % (url,retcode,curlerr))
+                                   % (url, retcode, curlerr))
         raise CurlError(retcode, curlerr)
     else:
         temp_download_exists = os.path.isfile(tempdownloadpath)
         http_result = header.get('http_result_code')
         if http_result.startswith('2') and \
-            temp_download_exists:
+                temp_download_exists:
             downloadedsize = os.path.getsize(tempdownloadpath)
             if downloadedsize >= targetsize:
                 if not downloadedpercent == 100:
                     munkicommon.display_percent_done(100, 100)
                 os.rename(tempdownloadpath, destinationpath)
                 if (resume and not header.get('etag')
-                    and not 'HTTPetag' in WARNINGSLOGGED):
+                        and not 'HTTPetag' in WARNINGSLOGGED):
                     # use display_info instead of display_warning so these
                     # don't get reported but are available in the log
                     # and in command-line output
@@ -385,7 +391,7 @@ def curl(url, destinationpath,
                 if not resume and temp_download_exists:
                     os.remove(tempdownloadpath)
                 raise CurlError(-5, 'Expected %s bytes, got: %s' %
-                                        (targetsize, downloadedsize))
+                                (targetsize, downloadedsize))
         elif http_result == '304':
             return header
         else:
@@ -397,15 +403,15 @@ def curl(url, destinationpath,
                 except OSError:
                     pass
             raise HTTPError(http_result,
-                                header.get('http_result_description',''))
+                            header.get('http_result_description', ''))
 
 
-def getResourceIfChangedAtomically(url, 
+def getResourceIfChangedAtomically(url,
                                    destinationpath,
                                    cert_info=None,
                                    custom_headers=None,
                                    expected_hash=None,
-                                   message=None, 
+                                   message=None,
                                    resume=False,
                                    verify=False,
                                    follow_redirects=False):
@@ -432,17 +438,17 @@ def getResourceIfChangedAtomically(url,
         if not xattr_hash:
             xattr_hash = writeCachedChecksum(destinationpath)
         if xattr_hash == expected_hash:
-            #File is already current, no change.
+            # File is already current, no change.
             return False
         elif munkicommon.pref('PackageVerificationMode').lower() in \
-                                                    ['hash_strict', 'hash']:
+                ['hash_strict', 'hash']:
             try:
                 os.unlink(destinationpath)
             except OSError:
                 pass
         munkicommon.log('Cached payload does not match hash in catalog, '
-                'will check if changed and redownload: %s' % destinationpath)
-        #continue with normal if-modified-since/etag update methods.
+                        'will check if changed and redownload: %s' % destinationpath)
+        # continue with normal if-modified-since/etag update methods.
 
     url_parse = urlparse.urlparse(url)
     if url_parse.scheme in ['http', 'https']:
@@ -454,12 +460,12 @@ def getResourceIfChangedAtomically(url,
         changed = getFileIfChangedAtomically(url_parse.path, destinationpath)
     else:
         raise MunkiDownloadError(
-                'Unsupported scheme for %s: %s' % (url, url_parse.scheme))
+            'Unsupported scheme for %s: %s' % (url, url_parse.scheme))
 
     if changed and verify:
         (verify_ok, fhash) = verifySoftwarePackageIntegrity(destinationpath,
-                                                          expected_hash,
-                                                          always_hash=True)
+                                                            expected_hash,
+                                                            always_hash=True)
         if not verify_ok:
             try:
                 os.unlink(destinationpath)
@@ -493,8 +499,8 @@ def getFileIfChangedAtomically(path, destinationpath):
 
     # if the destination exists, with same mtime and size, already cached
     if st_dst is not None and (
-        st_src.st_mtime == st_dst.st_mtime and
-        st_src.st_size == st_dst.st_size):
+            st_src.st_mtime == st_dst.st_mtime and
+            st_src.st_size == st_dst.st_size):
         return False
 
     # write to a temporary destination
@@ -570,7 +576,7 @@ def getHTTPfileIfChangedAtomically(url, destinationpath,
     if header['http_result_code'] == '304':
         # not modified, return existing file
         munkicommon.display_debug1('%s already exists and is up-to-date.'
-                                        % destinationpath)
+                                   % destinationpath)
         # file is in cache and is unchanged, so we return False
         return False
     else:
@@ -586,8 +592,8 @@ def getHTTPfileIfChangedAtomically(url, destinationpath,
             # store etag in extended attribute for future use
             xattr.setxattr(destinationpath, XATTR_ETAG, header['etag'])
         return True
-        
-        
+
+
 def getURLitemBasename(url):
     """For a URL, absolute or relative, return the basename string.
 
@@ -663,5 +669,3 @@ def verifySoftwarePackageIntegrity(file_path, item_hash, always_hash=False):
             'illegal value: %s' % munkicommon.pref('PackageVerificationMode'))
 
     return (False, chash)
-
-

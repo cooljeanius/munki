@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# encoding: utf-8
 #
 # Copyright 2011 Greg Neagle.
 #
@@ -40,13 +39,13 @@ class LaunchdJobException(Exception):
 
 class Job(object):
     '''launchd job object'''
-    
+
     def __init__(self, cmd, environment_vars=None):
         tmpdir = munkicommon.tmpdir
         LABELPREFIX = 'com.googlecode.munki.'
         # create a unique id for this job
         jobid = str(uuid.uuid1())
-        
+
         self.label = LABELPREFIX + jobid
         self.stdout_path = os.path.join(tmpdir, self.label + '.stdout')
         self.stderr_path = os.path.join(tmpdir, self.label + '.stderr')
@@ -74,7 +73,7 @@ class Job(object):
         (unused_out, err) = proc.communicate()
         if proc.returncode:
             raise LaunchdJobException(err)
-            
+
     def __del__(self):
         '''Attempt to clean up'''
         if self.plist:
@@ -95,7 +94,7 @@ class Job(object):
             os.unlink(self.stderr_path)
         except (OSError, IOError):
             pass
-            
+
     def start(self):
         '''Start the launchd job'''
         launchctl_cmd = ['/bin/launchctl', 'start', self.label]
@@ -108,7 +107,7 @@ class Job(object):
             raise LaunchdJobException(err)
         else:
             if (not os.path.exists(self.stdout_path) or
-                not os.path.exists(self.stderr_path)):
+                    not os.path.exists(self.stderr_path)):
                 # wait a second for the stdout/stderr files
                 # to be created by launchd
                 time.sleep(1)
@@ -119,7 +118,7 @@ class Job(object):
                 self.stderr = open(self.stderr_path, 'r')
             except (OSError, IOError), err:
                 raise LaunchdJobException(err)
-            
+
     def stop(self):
         '''Stop the launchd job'''
         launchctl_cmd = ['/bin/launchctl', 'stop', self.label]
@@ -130,7 +129,7 @@ class Job(object):
         (unused_out, err) = proc.communicate()
         if proc.returncode:
             raise LaunchdJobException(err)
-    
+
     def info(self):
         '''Get info about the launchd job. Returns a dictionary.'''
         info = {'state': 'unknown',
@@ -147,7 +146,7 @@ class Job(object):
         else:
             lines = str(out).splitlines()
             # search launchctl list output for our job label
-            job_lines = [item for item in lines 
+            job_lines = [item for item in lines
                          if item.endswith('\t' + self.label)]
             if len(job_lines) != 1:
                 # unexpected number of lines matched our label
@@ -167,7 +166,7 @@ class Job(object):
             else:
                 info['LastExitStatus'] = int(job_info[1])
             return info
-    
+
     def returncode(self):
         '''Returns the process exit code, if the job has exited; otherwise,
         returns None'''
@@ -185,4 +184,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

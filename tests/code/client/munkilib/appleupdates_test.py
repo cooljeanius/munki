@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# encoding: utf-8
 """
 appleupdates_test.py
 
@@ -21,11 +20,13 @@ Unit tests for appleupdates.
 # limitations under the License.
 
 import appleupdates
+
 try:
     import mox
 except ImportError:
     import sys
-    print >>sys.stderr, "mox module is required. run: easy_install mox"
+
+    print >> sys.stderr, "mox module is required. run: easy_install mox"
     raise
 from Foundation import NSDate
 import os
@@ -49,30 +50,40 @@ class TestAppleUpdates(mox.MoxTestBase):
     def _MockMunkiDisplay(self):
         """Mock out all munkicommon.display_* methods."""
         for display in [
-            'percent_done', 'status_major', 'status_minor',
-            'info', 'detail', 'debug1', 'debug2', 'warning', 'error']:
-            self.mox.StubOutWithMock(
-                appleupdates.munkicommon, 'display_%s' % display)
+            "percent_done",
+            "status_major",
+            "status_minor",
+            "info",
+            "detail",
+            "debug1",
+            "debug2",
+            "warning",
+            "error",
+        ]:
+            self.mox.StubOutWithMock(appleupdates.munkicommon, "display_%s" % display)
 
     def _MockMunkiStatus(self):
         """Mock out munkistatus.message/detail/percent methods."""
-        for method in ['message', 'detail', 'percent']:
+        for method in ["message", "detail", "percent"]:
             self.mox.StubOutWithMock(appleupdates.munkistatus, method)
 
     def _MockFoundationPlist(self):
         """Mock out all FoundationPlist functions."""
         for func_name in [
-            'readPlist', 'readPlistFromString', 'writePlist',
-            'writePlistToString']:
+            "readPlist",
+            "readPlistFromString",
+            "writePlist",
+            "writePlistToString",
+        ]:
             self.mox.StubOutWithMock(appleupdates.FoundationPlist, func_name)
 
     def testResetMunkiStatusAndDisplayMessageMunkiStatusOutputTrue(self):
         """Tests _ResetMunkiStatusAndDisplayMessage(), GUI is present."""
         self._MockMunkiStatus()
         self._MockMunkiDisplay()
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'log')
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "log")
 
-        msg = 'foo + bar == foobar'
+        msg = "foo + bar == foobar"
 
         appleupdates.munkicommon.munkistatusoutput = True
         appleupdates.munkicommon.display_status_major(msg)
@@ -85,7 +96,7 @@ class TestAppleUpdates(mox.MoxTestBase):
         """Tests _ResetMunkiStatusAndDisplayMessage(), GUI not present."""
         self._MockMunkiDisplay()
 
-        msg = 'asdf'
+        msg = "asdf"
 
         appleupdates.munkicommon.munkistatusoutput = False
         appleupdates.munkicommon.display_status_major(msg)
@@ -96,24 +107,24 @@ class TestAppleUpdates(mox.MoxTestBase):
 
     def testGetURLPath(self):
         """Tests _GetURLPath()."""
-        path = '/foo/bar/index.html'
-        url = 'https://www.example.com' + path
+        path = "/foo/bar/index.html"
+        url = "https://www.example.com" + path
         output_path = self.au._GetURLPath(url)
         self.assertEqual(output_path, path)
 
-        path = '/foo/bar/'
-        url = 'https://www.example.com' + path
+        path = "/foo/bar/"
+        url = "https://www.example.com" + path
         output_path = self.au._GetURLPath(url)
         self.assertEqual(output_path, path)
 
     def testRewriteURL(self):
         """Tests RewriteURL()."""
-        self.mox.StubOutWithMock(self.au, '_GetURLPath')
+        self.mox.StubOutWithMock(self.au, "_GetURLPath")
         managed_installs = appleupdates.urllib2.quote(self.au.cache_dir)
-        path = '/foo/bar/'
-        url = 'https://www.example.com' + path
+        path = "/foo/bar/"
+        url = "https://www.example.com" + path
         self.au._GetURLPath(url).AndReturn(path)
-        expected_output_url = 'file://localhost' + self.encoded_cache_dir + path
+        expected_output_url = "file://localhost" + self.encoded_cache_dir + path
         self.mox.ReplayAll()
         output_url = self.au.RewriteURL(url)
         self.assertEqual(output_url, expected_output_url)
@@ -121,7 +132,7 @@ class TestAppleUpdates(mox.MoxTestBase):
 
     def testRewriteURLWithFileURL(self):
         """Tests RewriteURL() with a file://localhost/Managed*... URL."""
-        url = 'file://localhost' + self.encoded_cache_dir + 'foo/bar'
+        url = "file://localhost" + self.encoded_cache_dir + "foo/bar"
         self.mox.ReplayAll()
         output_url = self.au.RewriteURL(url)
         self.assertEqual(output_url, url)
@@ -129,93 +140,94 @@ class TestAppleUpdates(mox.MoxTestBase):
 
     def testRewriteProductURLs(self):
         """Test RewriteProductURLs()."""
-        self.mox.StubOutWithMock(self.au, 'RewriteURL')
+        self.mox.StubOutWithMock(self.au, "RewriteURL")
 
         product = {
-            'ServerMetadataURL': 'urlin0',
-            'Packages': [
+            "ServerMetadataURL": "urlin0",
+            "Packages": [
                 {
-                    'URL': 'urlin1',
-                    'MetadataURL': 'urlin2',
+                    "URL": "urlin1",
+                    "MetadataURL": "urlin2",
                 },
             ],
-            'Distributions': {'lang': 'urlin3'},
+            "Distributions": {"lang": "urlin3"},
         }
 
-        self.au.RewriteURL('urlin0').AndReturn('urlout0')
-        self.au.RewriteURL('urlin2').AndReturn('urlout2')
-        self.au.RewriteURL('urlin3').AndReturn('urlout3')
+        self.au.RewriteURL("urlin0").AndReturn("urlout0")
+        self.au.RewriteURL("urlin2").AndReturn("urlout2")
+        self.au.RewriteURL("urlin3").AndReturn("urlout3")
 
         self.mox.ReplayAll()
         self.au.RewriteProductURLs(product)
-        self.assertEqual(product['ServerMetadataURL'], 'urlout0')
-        self.assertEqual(product['Packages'][0]['MetadataURL'], 'urlout2')
-        self.assertEqual(product['Distributions']['lang'], 'urlout3')
+        self.assertEqual(product["ServerMetadataURL"], "urlout0")
+        self.assertEqual(product["Packages"][0]["MetadataURL"], "urlout2")
+        self.assertEqual(product["Distributions"]["lang"], "urlout3")
         self.mox.VerifyAll()
 
     def testRewriteProductURLsWhenNoServerMetadataURL(self):
         """Test RewriteProductURLs() when no ServerMetadataURL in product."""
-        self.mox.StubOutWithMock(self.au, 'RewriteURL')
+        self.mox.StubOutWithMock(self.au, "RewriteURL")
 
         product = {
-            'Packages': [
+            "Packages": [
                 {
-                    'URL': 'urlin1',
-                    'MetadataURL': 'urlin2',
+                    "URL": "urlin1",
+                    "MetadataURL": "urlin2",
                 },
             ],
-            'Distributions': {'lang': 'urlin3'},
+            "Distributions": {"lang": "urlin3"},
         }
 
-        self.au.RewriteURL('urlin2').AndReturn('urlout2')
-        self.au.RewriteURL('urlin3').AndReturn('urlout3')
+        self.au.RewriteURL("urlin2").AndReturn("urlout2")
+        self.au.RewriteURL("urlin3").AndReturn("urlout3")
 
         self.mox.ReplayAll()
         self.au.RewriteProductURLs(product)
-        self.assertFalse('ServerMetadataURL' in product)
-        self.assertEqual(product['Packages'][0]['MetadataURL'], 'urlout2')
-        self.assertEqual(product['Distributions']['lang'], 'urlout3')
+        self.assertFalse("ServerMetadataURL" in product)
+        self.assertEqual(product["Packages"][0]["MetadataURL"], "urlout2")
+        self.assertEqual(product["Distributions"]["lang"], "urlout3")
         self.mox.VerifyAll()
 
     def testRewriteProductURLsWhenRewritePkgUrls(self):
         """Test RewriteProductURLs() when rewrite_pkg_urls=True."""
-        self.mox.StubOutWithMock(self.au, 'RewriteURL')
+        self.mox.StubOutWithMock(self.au, "RewriteURL")
 
         product = {
-            'ServerMetadataURL': 'urlin0',
-            'Packages': [
+            "ServerMetadataURL": "urlin0",
+            "Packages": [
                 {
-                    'URL': 'urlin1',
-                    'MetadataURL': 'urlin2',
+                    "URL": "urlin1",
+                    "MetadataURL": "urlin2",
                 },
             ],
-            'Distributions': {'lang': 'urlin3'},
+            "Distributions": {"lang": "urlin3"},
         }
 
-        self.au.RewriteURL('urlin0').AndReturn('urlout0')
-        self.au.RewriteURL('urlin1').AndReturn('urlout1')
-        self.au.RewriteURL('urlin2').AndReturn('urlout2')
-        self.au.RewriteURL('urlin3').AndReturn('urlout3')
+        self.au.RewriteURL("urlin0").AndReturn("urlout0")
+        self.au.RewriteURL("urlin1").AndReturn("urlout1")
+        self.au.RewriteURL("urlin2").AndReturn("urlout2")
+        self.au.RewriteURL("urlin3").AndReturn("urlout3")
 
         self.mox.ReplayAll()
         self.au.RewriteProductURLs(product, rewrite_pkg_urls=True)
-        self.assertEqual(product['ServerMetadataURL'], 'urlout0')
-        self.assertEqual(product['Packages'][0]['URL'], 'urlout1')
-        self.assertEqual(product['Packages'][0]['MetadataURL'], 'urlout2')
-        self.assertEqual(product['Distributions']['lang'], 'urlout3')
+        self.assertEqual(product["ServerMetadataURL"], "urlout0")
+        self.assertEqual(product["Packages"][0]["URL"], "urlout1")
+        self.assertEqual(product["Packages"][0]["MetadataURL"], "urlout2")
+        self.assertEqual(product["Distributions"]["lang"], "urlout3")
         self.mox.VerifyAll()
 
     def testRewriteCatalogURLs(self):
         """Test RewriteCatalogURLs()."""
-        self.mox.StubOutWithMock(self.au, 'RewriteProductURLs')
+        self.mox.StubOutWithMock(self.au, "RewriteProductURLs")
         catalog = {
-            'Products': {
-                'key0': 'data',
+            "Products": {
+                "key0": "data",
             },
         }
 
         self.au.RewriteProductURLs(
-            catalog['Products']['key0'], rewrite_pkg_urls=1).AndReturn(None)
+            catalog["Products"]["key0"], rewrite_pkg_urls=1
+        ).AndReturn(None)
 
         self.mox.ReplayAll()
         self.au.RewriteCatalogURLs(catalog, rewrite_pkg_urls=1)
@@ -223,10 +235,10 @@ class TestAppleUpdates(mox.MoxTestBase):
 
     def testRewriteCatalogURLsWhenNoProducts(self):
         """Test RewriteCatalogURLs() when no products in catalog."""
-        self.mox.StubOutWithMock(self.au, 'RewriteProductURLs')
+        self.mox.StubOutWithMock(self.au, "RewriteProductURLs")
         catalog = {
-            'not Products': {
-                'key0': 'data',
+            "not Products": {
+                "key0": "data",
             },
         }
 
@@ -238,65 +250,61 @@ class TestAppleUpdates(mox.MoxTestBase):
         """Test CacheUpdateMetadata()."""
         self._MockMunkiDisplay()
         self._MockFoundationPlist()
-        self.mox.StubOutWithMock(self.au, 'RetrieveURLToCacheDir')
-        self.mox.StubOutWithMock(self.au, 'RewriteCatalogURLs')
-        self.mox.StubOutWithMock(appleupdates.os.path, 'exists')
-        self.mox.StubOutWithMock(appleupdates.os, 'makedirs')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'stopRequested')
-
+        self.mox.StubOutWithMock(self.au, "RetrieveURLToCacheDir")
+        self.mox.StubOutWithMock(self.au, "RewriteCatalogURLs")
+        self.mox.StubOutWithMock(appleupdates.os.path, "exists")
+        self.mox.StubOutWithMock(appleupdates.os, "makedirs")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "stopRequested")
 
         catalog = {
-            'Products': {
-                'key0': {
-                    'ServerMetadataURL': 'url0',
-                    'Packages': [
-                        {'MetadataURL': 'url1'},
+            "Products": {
+                "key0": {
+                    "ServerMetadataURL": "url0",
+                    "Packages": [
+                        {"MetadataURL": "url1"},
                     ],
-                    'Distributions': {
-                        'lang': 'url2',
+                    "Distributions": {
+                        "lang": "url2",
                     },
                 },
             },
         }
 
-        appleupdates.FoundationPlist.readPlist(
-            self.au.filtered_catalog_path).AndReturn(catalog)
+        appleupdates.FoundationPlist.readPlist(self.au.filtered_catalog_path).AndReturn(
+            catalog
+        )
 
         appleupdates.munkicommon.stopRequested().AndReturn(False)
         appleupdates.munkicommon.display_status_minor(
-            'Caching metadata for product ID %s', 'key0')
-        self.au.RetrieveURLToCacheDir(
-            'url0', copy_only_if_missing=True).AndReturn(None)
+            "Caching metadata for product ID %s", "key0"
+        )
+        self.au.RetrieveURLToCacheDir("url0", copy_only_if_missing=True).AndReturn(None)
 
         appleupdates.munkicommon.stopRequested().AndReturn(False)
         appleupdates.munkicommon.display_status_minor(
-            'Caching package metadata for product ID %s', 'key0')
-        self.au.RetrieveURLToCacheDir(
-            'url1', copy_only_if_missing=True).AndReturn(None)
+            "Caching package metadata for product ID %s", "key0"
+        )
+        self.au.RetrieveURLToCacheDir("url1", copy_only_if_missing=True).AndReturn(None)
 
         appleupdates.munkicommon.stopRequested().AndReturn(False)
         appleupdates.munkicommon.display_status_minor(
-            'Caching %s distribution for product ID %s', 'lang',
-            'key0').AndReturn(None)
-        self.au.RetrieveURLToCacheDir(
-            'url2', copy_only_if_missing=True).AndReturn(None)
+            "Caching %s distribution for product ID %s", "lang", "key0"
+        ).AndReturn(None)
+        self.au.RetrieveURLToCacheDir("url2", copy_only_if_missing=True).AndReturn(None)
 
         appleupdates.munkicommon.stopRequested().AndReturn(False)
 
-        self.au.RewriteCatalogURLs(
-            catalog, rewrite_pkg_urls=False).AndReturn(None)
-        appleupdates.os.path.exists(
-            self.au.local_catalog_dir).AndReturn(False)
+        self.au.RewriteCatalogURLs(catalog, rewrite_pkg_urls=False).AndReturn(None)
+        appleupdates.os.path.exists(self.au.local_catalog_dir).AndReturn(False)
         appleupdates.os.makedirs(self.au.local_catalog_dir).AndReturn(None)
 
         appleupdates.FoundationPlist.writePlist(
-            catalog, self.au.local_download_catalog_path)
+            catalog, self.au.local_download_catalog_path
+        )
 
-        self.au.RewriteCatalogURLs(catalog, rewrite_pkg_urls=True).AndReturn(
-            None)
+        self.au.RewriteCatalogURLs(catalog, rewrite_pkg_urls=True).AndReturn(None)
 
-        appleupdates.FoundationPlist.writePlist(
-            catalog, self.au.local_catalog_path)
+        appleupdates.FoundationPlist.writePlist(catalog, self.au.local_catalog_path)
 
         self.mox.ReplayAll()
         self.assertEqual(None, self.au.CacheUpdateMetadata())
@@ -306,56 +314,54 @@ class TestAppleUpdates(mox.MoxTestBase):
         """Test CacheUpdateMetadata() when os.makedirs() errors."""
         self._MockMunkiDisplay()
         self._MockFoundationPlist()
-        self.mox.StubOutWithMock(self.au, 'RetrieveURLToCacheDir')
-        self.mox.StubOutWithMock(appleupdates.os.path, 'exists')
-        self.mox.StubOutWithMock(appleupdates.os, 'makedirs')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'stopRequested')
+        self.mox.StubOutWithMock(self.au, "RetrieveURLToCacheDir")
+        self.mox.StubOutWithMock(appleupdates.os.path, "exists")
+        self.mox.StubOutWithMock(appleupdates.os, "makedirs")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "stopRequested")
 
         catalog = {
-            'Products': {
-                'key0': {
-                    'ServerMetadataURL': 'url0',
-                    'Packages': [
-                        {'MetadataURL': 'url1'},
+            "Products": {
+                "key0": {
+                    "ServerMetadataURL": "url0",
+                    "Packages": [
+                        {"MetadataURL": "url1"},
                     ],
-                    'Distributions': {
-                        'lang': 'url2',
+                    "Distributions": {
+                        "lang": "url2",
                     },
                 },
             },
         }
 
-        appleupdates.FoundationPlist.readPlist(
-            self.au.filtered_catalog_path).AndReturn(catalog)
+        appleupdates.FoundationPlist.readPlist(self.au.filtered_catalog_path).AndReturn(
+            catalog
+        )
 
         appleupdates.munkicommon.stopRequested().AndReturn(False)
         appleupdates.munkicommon.display_status_minor(
-            'Caching metadata for product ID %s', 'key0')
-        self.au.RetrieveURLToCacheDir(
-            'url0', copy_only_if_missing=True).AndReturn(None)
+            "Caching metadata for product ID %s", "key0"
+        )
+        self.au.RetrieveURLToCacheDir("url0", copy_only_if_missing=True).AndReturn(None)
 
         appleupdates.munkicommon.stopRequested().AndReturn(False)
         appleupdates.munkicommon.display_status_minor(
-            'Caching package metadata for product ID %s', 'key0')
-        self.au.RetrieveURLToCacheDir(
-            'url1', copy_only_if_missing=True).AndReturn(None)
+            "Caching package metadata for product ID %s", "key0"
+        )
+        self.au.RetrieveURLToCacheDir("url1", copy_only_if_missing=True).AndReturn(None)
 
         appleupdates.munkicommon.stopRequested().AndReturn(False)
         appleupdates.munkicommon.display_status_minor(
-            'Caching %s distribution for product ID %s', 'lang',
-            'key0').AndReturn(None)
-        self.au.RetrieveURLToCacheDir(
-            'url2', copy_only_if_missing=True).AndReturn(None)
+            "Caching %s distribution for product ID %s", "lang", "key0"
+        ).AndReturn(None)
+        self.au.RetrieveURLToCacheDir("url2", copy_only_if_missing=True).AndReturn(None)
 
         appleupdates.munkicommon.stopRequested().AndReturn(False)
 
-        appleupdates.os.path.exists(
-            self.au.local_catalog_dir).AndReturn(False)
+        appleupdates.os.path.exists(self.au.local_catalog_dir).AndReturn(False)
         appleupdates.os.makedirs(self.au.local_catalog_dir).AndRaise(OSError)
 
         self.mox.ReplayAll()
-        self.assertRaises(
-                appleupdates.ReplicationError, self.au.CacheUpdateMetadata)
+        self.assertRaises(appleupdates.ReplicationError, self.au.CacheUpdateMetadata)
         self.mox.VerifyAll()
 
     def testCacheUpdateMetadataWhenNoProducts(self):
@@ -365,8 +371,9 @@ class TestAppleUpdates(mox.MoxTestBase):
 
         catalog = {}
 
-        appleupdates.FoundationPlist.readPlist(
-            self.au.filtered_catalog_path).AndReturn(catalog)
+        appleupdates.FoundationPlist.readPlist(self.au.filtered_catalog_path).AndReturn(
+            catalog
+        )
 
         self.mox.ReplayAll()
         self.assertEqual(None, self.au.CacheUpdateMetadata())
@@ -374,22 +381,23 @@ class TestAppleUpdates(mox.MoxTestBase):
 
     def testRetrieveURLToCacheDir(self):
         """Tests RetrieveURLToCacheDir()."""
-        self.mox.StubOutWithMock(self.au, '_GetURLPath')
-        self.mox.StubOutWithMock(appleupdates.os, 'makedirs')
-        self.mox.StubOutWithMock(appleupdates.os.path, 'exists')
-        self.mox.StubOutWithMock(self.au, 'GetSoftwareUpdateResource')
+        self.mox.StubOutWithMock(self.au, "_GetURLPath")
+        self.mox.StubOutWithMock(appleupdates.os, "makedirs")
+        self.mox.StubOutWithMock(appleupdates.os.path, "exists")
+        self.mox.StubOutWithMock(self.au, "GetSoftwareUpdateResource")
 
-        path = '/foo/bar'
-        url = 'https://www.example.com' + path
-        local_file_path = os.path.join(self.au.cache_dir, path.lstrip('/'))
+        path = "/foo/bar"
+        url = "https://www.example.com" + path
+        local_file_path = os.path.join(self.au.cache_dir, path.lstrip("/"))
         local_dir_path = os.path.dirname(local_file_path)
 
         self.au._GetURLPath(url).AndReturn(path)
 
         appleupdates.os.path.exists(local_dir_path).AndReturn(False)
         appleupdates.os.makedirs(local_dir_path).AndReturn(None)
-        self.au.GetSoftwareUpdateResource(
-            url, local_file_path, resume=True).AndReturn(None)
+        self.au.GetSoftwareUpdateResource(url, local_file_path, resume=True).AndReturn(
+            None
+        )
 
         self.mox.ReplayAll()
         output = self.au.RetrieveURLToCacheDir(url)
@@ -398,38 +406,37 @@ class TestAppleUpdates(mox.MoxTestBase):
 
     def testRetrieveURLToCacheDirWithMunkiDownloadError(self):
         """Tests RetrieveURLToCacheDir() with MunkiDownloadError."""
-        self.mox.StubOutWithMock(self.au, '_GetURLPath')
-        self.mox.StubOutWithMock(appleupdates.os, 'makedirs')
-        self.mox.StubOutWithMock(appleupdates.os.path, 'exists')
-        self.mox.StubOutWithMock(self.au, 'GetSoftwareUpdateResource')
+        self.mox.StubOutWithMock(self.au, "_GetURLPath")
+        self.mox.StubOutWithMock(appleupdates.os, "makedirs")
+        self.mox.StubOutWithMock(appleupdates.os.path, "exists")
+        self.mox.StubOutWithMock(self.au, "GetSoftwareUpdateResource")
 
-        path = '/foo/bar'
-        url = 'https://www.example.com' + path
-        local_file_path = os.path.join(self.au.cache_dir, path.lstrip('/'))
+        path = "/foo/bar"
+        url = "https://www.example.com" + path
+        local_file_path = os.path.join(self.au.cache_dir, path.lstrip("/"))
         local_dir_path = os.path.dirname(local_file_path)
 
         self.au._GetURLPath(url).AndReturn(path)
 
         appleupdates.os.path.exists(local_dir_path).AndReturn(False)
         appleupdates.os.makedirs(local_dir_path).AndReturn(None)
-        self.au.GetSoftwareUpdateResource(
-            url, local_file_path, resume=True).AndRaise(
-                appleupdates.fetch.MunkiDownloadError)
+        self.au.GetSoftwareUpdateResource(url, local_file_path, resume=True).AndRaise(
+            appleupdates.fetch.MunkiDownloadError
+        )
 
         self.mox.ReplayAll()
-        self.assertRaises(
-            appleupdates.Error, self.au.RetrieveURLToCacheDir, url)
+        self.assertRaises(appleupdates.Error, self.au.RetrieveURLToCacheDir, url)
         self.mox.VerifyAll()
 
     def testRetrieveURLToCacheDirMakedirsError(self):
         """Tests RetrieveURLToCacheDir() with os.makedirs() error."""
-        self.mox.StubOutWithMock(self.au, '_GetURLPath')
-        self.mox.StubOutWithMock(appleupdates.os, 'makedirs')
-        self.mox.StubOutWithMock(appleupdates.os.path, 'exists')
+        self.mox.StubOutWithMock(self.au, "_GetURLPath")
+        self.mox.StubOutWithMock(appleupdates.os, "makedirs")
+        self.mox.StubOutWithMock(appleupdates.os.path, "exists")
 
-        path = '/foo/bar'
-        url = 'https://www.example.com' + path
-        local_file_path = os.path.join(self.au.cache_dir, path.lstrip('/'))
+        path = "/foo/bar"
+        url = "https://www.example.com" + path
+        local_file_path = os.path.join(self.au.cache_dir, path.lstrip("/"))
         local_dir_path = os.path.dirname(local_file_path)
 
         self.au._GetURLPath(url).AndReturn(path)
@@ -438,18 +445,17 @@ class TestAppleUpdates(mox.MoxTestBase):
         appleupdates.os.makedirs(local_dir_path).AndRaise(OSError)
 
         self.mox.ReplayAll()
-        self.assertRaises(
-            appleupdates.Error, self.au.RetrieveURLToCacheDir, url)
+        self.assertRaises(appleupdates.Error, self.au.RetrieveURLToCacheDir, url)
         self.mox.VerifyAll()
 
     def testRetrieveURLToCacheDirCopyOnlyIfMissing(self):
         """Tests RetrieveURLToCacheDir() with copy_only_if_missing=True."""
-        self.mox.StubOutWithMock(self.au, '_GetURLPath')
-        self.mox.StubOutWithMock(appleupdates.os.path, 'exists')
+        self.mox.StubOutWithMock(self.au, "_GetURLPath")
+        self.mox.StubOutWithMock(appleupdates.os.path, "exists")
 
-        path = '/foo/bar'
-        url = 'https://www.example.com' + path
-        local_file_path = os.path.join(self.au.cache_dir, path.lstrip('/'))
+        path = "/foo/bar"
+        url = "https://www.example.com" + path
+        local_file_path = os.path.join(self.au.cache_dir, path.lstrip("/"))
 
         self.au._GetURLPath(url).AndReturn(path)
 
@@ -464,16 +470,18 @@ class TestAppleUpdates(mox.MoxTestBase):
         """Tests _WriteFilteredCatalog()."""
         self._MockFoundationPlist()
 
-        catalog_path = 'foo/catalog.sucatalog'
-        product_ids = ['1', '3']
-        catalog = {'Products': {'1': 'foo', '2': 'bar', '3': None}}
+        catalog_path = "foo/catalog.sucatalog"
+        product_ids = ["1", "3"]
+        catalog = {"Products": {"1": "foo", "2": "bar", "3": None}}
         # output catalog will be missing 2, since it's not in product_ids
-        output_catalog = {'Products': {'1': 'foo', '3': None}}
+        output_catalog = {"Products": {"1": "foo", "3": None}}
 
         appleupdates.FoundationPlist.readPlist(
-            self.au.extracted_catalog_path).AndReturn(catalog)
-        appleupdates.FoundationPlist.writePlist(
-            output_catalog, catalog_path).AndReturn(None)
+            self.au.extracted_catalog_path
+        ).AndReturn(catalog)
+        appleupdates.FoundationPlist.writePlist(output_catalog, catalog_path).AndReturn(
+            None
+        )
 
         self.mox.ReplayAll()
         self.au._WriteFilteredCatalog(product_ids, catalog_path)
@@ -484,13 +492,14 @@ class TestAppleUpdates(mox.MoxTestBase):
         self._MockFoundationPlist()
 
         apple_updates = {
-            'AppleUpdates': [
-                {'RestartAction': 'None'},
-                {'RestartAction': 'Nope'},
+            "AppleUpdates": [
+                {"RestartAction": "None"},
+                {"RestartAction": "Nope"},
             ]
         }
-        appleupdates.FoundationPlist.readPlist(
-            self.au.apple_updates_plist).AndReturn(apple_updates)
+        appleupdates.FoundationPlist.readPlist(self.au.apple_updates_plist).AndReturn(
+            apple_updates
+        )
         self.mox.ReplayAll()
         self.assertFalse(self.au.IsRestartNeeded())
         self.mox.VerifyAll()
@@ -500,13 +509,14 @@ class TestAppleUpdates(mox.MoxTestBase):
         self._MockFoundationPlist()
 
         apple_updates = {
-            'AppleUpdates': [
-                {'RestartAction': 'None'},
-                {'RestartAction': self.au.RESTART_ACTIONS[0]},
+            "AppleUpdates": [
+                {"RestartAction": "None"},
+                {"RestartAction": self.au.RESTART_ACTIONS[0]},
             ]
         }
-        appleupdates.FoundationPlist.readPlist(
-            self.au.apple_updates_plist).AndReturn(apple_updates)
+        appleupdates.FoundationPlist.readPlist(self.au.apple_updates_plist).AndReturn(
+            apple_updates
+        )
         self.mox.ReplayAll()
         self.assertTrue(self.au.IsRestartNeeded())
         self.mox.VerifyAll()
@@ -516,8 +526,9 @@ class TestAppleUpdates(mox.MoxTestBase):
         self._MockFoundationPlist()
 
         exc = appleupdates.FoundationPlist.NSPropertyListSerializationException
-        appleupdates.FoundationPlist.readPlist(
-            self.au.apple_updates_plist).AndRaise(exc)
+        appleupdates.FoundationPlist.readPlist(self.au.apple_updates_plist).AndRaise(
+            exc
+        )
 
         self.mox.ReplayAll()
         self.assertTrue(self.au.IsRestartNeeded())
@@ -525,7 +536,7 @@ class TestAppleUpdates(mox.MoxTestBase):
 
     def testClearAppleUpdateInfo(self):
         """Tests ClearAppleUpdateInfo()."""
-        self.mox.StubOutWithMock(appleupdates.os, 'unlink')
+        self.mox.StubOutWithMock(appleupdates.os, "unlink")
 
         appleupdates.os.unlink(self.au.apple_updates_plist).AndReturn(None)
         appleupdates.os.unlink(self.au.apple_updates_plist).AndRaise(OSError)
@@ -540,24 +551,24 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testDownloadAvailableUpdates(self):
         """Tests DownloadAvailableUpdates()."""
         self._MockMunkiDisplay()
-        self.mox.StubOutWithMock(self.au, '_ResetMunkiStatusAndDisplayMessage')
-        self.mox.StubOutWithMock(self.au, '_RunSoftwareUpdate')
-        self.mox.StubOutWithMock(appleupdates.os.path, 'exists')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'getOsVersion')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'stopRequested')
+        self.mox.StubOutWithMock(self.au, "_ResetMunkiStatusAndDisplayMessage")
+        self.mox.StubOutWithMock(self.au, "_RunSoftwareUpdate")
+        self.mox.StubOutWithMock(appleupdates.os.path, "exists")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "getOsVersion")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "stopRequested")
 
-        msg = 'Downloading available Apple Software Updates...'
-        catalog_url = 'file://localhost' + appleupdates.urllib2.quote(
-            self.au.local_download_catalog_path)
+        msg = "Downloading available Apple Software Updates..."
+        catalog_url = "file://localhost" + appleupdates.urllib2.quote(
+            self.au.local_download_catalog_path
+        )
 
         self.au._ResetMunkiStatusAndDisplayMessage(msg).AndReturn(None)
 
-        appleupdates.os.path.exists(
-            self.au.local_download_catalog_path).AndReturn(True)
-        appleupdates.munkicommon.getOsVersion().AndReturn('10.7')
+        appleupdates.os.path.exists(self.au.local_download_catalog_path).AndReturn(True)
+        appleupdates.munkicommon.getOsVersion().AndReturn("10.7")
         self.au._RunSoftwareUpdate(
-            ['--CatalogURL', catalog_url, '-d', '-a'],
-            stop_allowed=True).AndReturn(0)
+            ["--CatalogURL", catalog_url, "-d", "-a"], stop_allowed=True
+        ).AndReturn(0)
         appleupdates.munkicommon.stopRequested().AndReturn(False)
 
         self.mox.ReplayAll()
@@ -567,21 +578,21 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testDownloadAvailableUpdatesLeopard(self):
         """Tests DownloadAvailableUpdates() with Leopard."""
         self._MockMunkiDisplay()
-        self.mox.StubOutWithMock(self.au, '_ResetMunkiStatusAndDisplayMessage')
-        self.mox.StubOutWithMock(self.au, '_LeopardDownloadAvailableUpdates')
-        self.mox.StubOutWithMock(appleupdates.os.path, 'exists')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'getOsVersion')
+        self.mox.StubOutWithMock(self.au, "_ResetMunkiStatusAndDisplayMessage")
+        self.mox.StubOutWithMock(self.au, "_LeopardDownloadAvailableUpdates")
+        self.mox.StubOutWithMock(appleupdates.os.path, "exists")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "getOsVersion")
 
-        catalog_url = 'file://localhost' + appleupdates.urllib2.quote(
-            self.au.local_download_catalog_path)
+        catalog_url = "file://localhost" + appleupdates.urllib2.quote(
+            self.au.local_download_catalog_path
+        )
 
-        msg = 'Downloading available Apple Software Updates...'
+        msg = "Downloading available Apple Software Updates..."
         self.au._ResetMunkiStatusAndDisplayMessage(msg).AndReturn(None)
-        appleupdates.os.path.exists(
-            self.au.local_download_catalog_path).AndReturn(True)
-        appleupdates.munkicommon.getOsVersion().AndReturn('10.5')
+        appleupdates.os.path.exists(self.au.local_download_catalog_path).AndReturn(True)
+        appleupdates.munkicommon.getOsVersion().AndReturn("10.5")
         self.au._LeopardDownloadAvailableUpdates(catalog_url).AndReturn(2)
-        appleupdates.munkicommon.display_error('softwareupdate error: %s' % 2)
+        appleupdates.munkicommon.display_error("softwareupdate error: %s" % 2)
 
         self.mox.ReplayAll()
         self.assertFalse(self.au.DownloadAvailableUpdates())
@@ -590,17 +601,19 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testDownloadAvailableUpdatesMissingCatalog(self):
         """Tests DownloadAvailableUpdates() with a missing catalog."""
         self._MockMunkiDisplay()
-        self.mox.StubOutWithMock(self.au, '_ResetMunkiStatusAndDisplayMessage')
-        self.mox.StubOutWithMock(appleupdates.os.path, 'exists')
+        self.mox.StubOutWithMock(self.au, "_ResetMunkiStatusAndDisplayMessage")
+        self.mox.StubOutWithMock(appleupdates.os.path, "exists")
 
-        msg = 'Downloading available Apple Software Updates...'
+        msg = "Downloading available Apple Software Updates..."
         self.au._ResetMunkiStatusAndDisplayMessage(msg).AndReturn(None)
 
-        appleupdates.os.path.exists(
-            self.au.local_download_catalog_path).AndReturn(False)
+        appleupdates.os.path.exists(self.au.local_download_catalog_path).AndReturn(
+            False
+        )
         appleupdates.munkicommon.display_error(
-            'Missing local Software Update catalog at %s',
-            self.au.local_download_catalog_path)
+            "Missing local Software Update catalog at %s",
+            self.au.local_download_catalog_path,
+        )
 
         self.mox.ReplayAll()
         self.assertFalse(self.au.DownloadAvailableUpdates())
@@ -609,26 +622,26 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testGetAvailableUpdateProductIDsFailedSoftwareUpdate(self):
         """Tests GetAvailableUpdateProductIDs() with failed softwareupdate."""
         self._MockMunkiDisplay()
-        self.mox.StubOutWithMock(self.au, '_RunSoftwareUpdate')
-        self.mox.StubOutWithMock(self.au, '_ResetMunkiStatusAndDisplayMessage')
-        self.mox.StubOutWithMock(appleupdates.os, 'unlink')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'getOsVersion')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'stopRequested')
+        self.mox.StubOutWithMock(self.au, "_RunSoftwareUpdate")
+        self.mox.StubOutWithMock(self.au, "_ResetMunkiStatusAndDisplayMessage")
+        self.mox.StubOutWithMock(appleupdates.os, "unlink")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "getOsVersion")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "stopRequested")
 
-        msg = 'Checking for available Apple Software Updates...'
+        msg = "Checking for available Apple Software Updates..."
         self.au._ResetMunkiStatusAndDisplayMessage(msg)
-        appleupdates.os.unlink(self.au.applicable_updates_plist).AndRaise(
-            OSError)
+        appleupdates.os.unlink(self.au.applicable_updates_plist).AndRaise(OSError)
 
-        catalog_url = 'file://localhost' + appleupdates.urllib2.quote(
-            self.au.extracted_catalog_path)
+        catalog_url = "file://localhost" + appleupdates.urllib2.quote(
+            self.au.extracted_catalog_path
+        )
         self.au._RunSoftwareUpdate(
-            ['--CatalogURL', catalog_url, '-l', '-f',
-             self.au.applicable_updates_plist],
-            stop_allowed=True).AndReturn(1)
+            ["--CatalogURL", catalog_url, "-l", "-f", self.au.applicable_updates_plist],
+            stop_allowed=True,
+        ).AndReturn(1)
 
-        appleupdates.munkicommon.getOsVersion().AndReturn('10.6')
-        appleupdates.munkicommon.display_error('softwareupdate error: %s' % 1)
+        appleupdates.munkicommon.getOsVersion().AndReturn("10.6")
+        appleupdates.munkicommon.display_error("softwareupdate error: %s" % 1)
         appleupdates.munkicommon.stopRequested().AndReturn(False)
 
         self.mox.ReplayAll()
@@ -639,26 +652,27 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testGetAvailableUpdateProductIDsFailureReadingApplicalbeUpdates(self):
         """Tests GetAvailableUpdateProductIDs() failed applicable updates."""
         self._MockFoundationPlist()
-        self.mox.StubOutWithMock(self.au, '_RunSoftwareUpdate')
-        self.mox.StubOutWithMock(self.au, '_ResetMunkiStatusAndDisplayMessage')
-        self.mox.StubOutWithMock(appleupdates.os, 'unlink')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'getOsVersion')
+        self.mox.StubOutWithMock(self.au, "_RunSoftwareUpdate")
+        self.mox.StubOutWithMock(self.au, "_ResetMunkiStatusAndDisplayMessage")
+        self.mox.StubOutWithMock(appleupdates.os, "unlink")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "getOsVersion")
 
-        msg = 'Checking for available Apple Software Updates...'
+        msg = "Checking for available Apple Software Updates..."
         self.au._ResetMunkiStatusAndDisplayMessage(msg)
-        appleupdates.os.unlink(self.au.applicable_updates_plist).AndRaise(
-            OSError)
+        appleupdates.os.unlink(self.au.applicable_updates_plist).AndRaise(OSError)
 
-        catalog_url = 'file://localhost' + appleupdates.urllib2.quote(
-            self.au.extracted_catalog_path)
+        catalog_url = "file://localhost" + appleupdates.urllib2.quote(
+            self.au.extracted_catalog_path
+        )
         self.au._RunSoftwareUpdate(
-            ['--CatalogURL', catalog_url, '-l', '-f',
-             self.au.applicable_updates_plist],
-            stop_allowed=True).AndReturn(0)
+            ["--CatalogURL", catalog_url, "-l", "-f", self.au.applicable_updates_plist],
+            stop_allowed=True,
+        ).AndReturn(0)
 
         exc = appleupdates.FoundationPlist.NSPropertyListSerializationException
         appleupdates.FoundationPlist.readPlist(
-            self.au.applicable_updates_plist).AndRaise(exc)
+            self.au.applicable_updates_plist
+        ).AndRaise(exc)
 
         self.mox.ReplayAll()
         output = self.au.GetAvailableUpdateProductIDs()
@@ -668,25 +682,26 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testGetAvailableUpdateProductIDsEmptyApplicableUpdates(self):
         """Tests GetAvailableUpdateProductIDs() empty applicable updates."""
         self._MockFoundationPlist()
-        self.mox.StubOutWithMock(self.au, '_RunSoftwareUpdate')
-        self.mox.StubOutWithMock(self.au, '_ResetMunkiStatusAndDisplayMessage')
-        self.mox.StubOutWithMock(appleupdates.os, 'unlink')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'getOsVersion')
+        self.mox.StubOutWithMock(self.au, "_RunSoftwareUpdate")
+        self.mox.StubOutWithMock(self.au, "_ResetMunkiStatusAndDisplayMessage")
+        self.mox.StubOutWithMock(appleupdates.os, "unlink")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "getOsVersion")
 
-        msg = 'Checking for available Apple Software Updates...'
+        msg = "Checking for available Apple Software Updates..."
         self.au._ResetMunkiStatusAndDisplayMessage(msg)
-        appleupdates.os.unlink(self.au.applicable_updates_plist).AndRaise(
-            OSError)
+        appleupdates.os.unlink(self.au.applicable_updates_plist).AndRaise(OSError)
 
-        catalog_url = 'file://localhost' + appleupdates.urllib2.quote(
-            self.au.extracted_catalog_path)
+        catalog_url = "file://localhost" + appleupdates.urllib2.quote(
+            self.au.extracted_catalog_path
+        )
         self.au._RunSoftwareUpdate(
-            ['--CatalogURL', catalog_url, '-l', '-f',
-             self.au.applicable_updates_plist],
-            stop_allowed=True).AndReturn(0)
+            ["--CatalogURL", catalog_url, "-l", "-f", self.au.applicable_updates_plist],
+            stop_allowed=True,
+        ).AndReturn(0)
 
         appleupdates.FoundationPlist.readPlist(
-            self.au.applicable_updates_plist).AndReturn({})
+            self.au.applicable_updates_plist
+        ).AndReturn({})
 
         self.mox.ReplayAll()
         output = self.au.GetAvailableUpdateProductIDs()
@@ -696,75 +711,74 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testGetAvailableUpdateProductIDsSuccess(self):
         """Tests GetAvailableUpdateProductIDs()."""
         self._MockFoundationPlist()
-        self.mox.StubOutWithMock(self.au, '_RunSoftwareUpdate')
-        self.mox.StubOutWithMock(self.au, '_ResetMunkiStatusAndDisplayMessage')
-        self.mox.StubOutWithMock(appleupdates.os, 'unlink')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'getOsVersion')
+        self.mox.StubOutWithMock(self.au, "_RunSoftwareUpdate")
+        self.mox.StubOutWithMock(self.au, "_ResetMunkiStatusAndDisplayMessage")
+        self.mox.StubOutWithMock(appleupdates.os, "unlink")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "getOsVersion")
 
         updates_plist_dict = {
-            'phaseResultsArray': [
-                {'productKey': '4zzz'},
-                {'noProductKeyHere': True},
-                {'productKey': 'zzz5'},
+            "phaseResultsArray": [
+                {"productKey": "4zzz"},
+                {"noProductKeyHere": True},
+                {"productKey": "zzz5"},
             ]
         }
 
-        msg = 'Checking for available Apple Software Updates...'
+        msg = "Checking for available Apple Software Updates..."
         self.au._ResetMunkiStatusAndDisplayMessage(msg)
-        appleupdates.os.unlink(self.au.applicable_updates_plist).AndRaise(
-            OSError)
+        appleupdates.os.unlink(self.au.applicable_updates_plist).AndRaise(OSError)
 
-        catalog_url = 'file://localhost' + appleupdates.urllib2.quote(
-            self.au.extracted_catalog_path)
+        catalog_url = "file://localhost" + appleupdates.urllib2.quote(
+            self.au.extracted_catalog_path
+        )
         self.au._RunSoftwareUpdate(
-            ['--CatalogURL', catalog_url, '-l', '-f',
-             self.au.applicable_updates_plist],
-            stop_allowed=True).AndReturn(0)
+            ["--CatalogURL", catalog_url, "-l", "-f", self.au.applicable_updates_plist],
+            stop_allowed=True,
+        ).AndReturn(0)
 
         appleupdates.FoundationPlist.readPlist(
-            self.au.applicable_updates_plist).AndReturn(updates_plist_dict)
+            self.au.applicable_updates_plist
+        ).AndReturn(updates_plist_dict)
 
         self.mox.ReplayAll()
         output = self.au.GetAvailableUpdateProductIDs()
         self.assertEqual(len(output), 2)
-        self.assertTrue('4zzz' in output)
-        self.assertTrue('zzz5' in output)
+        self.assertTrue("4zzz" in output)
+        self.assertTrue("zzz5" in output)
         self.mox.VerifyAll()
 
     def testExtractAndCopyDownloadedCatalogMakedirsError(self):
         """Tests ExtractAndCopyDownloadedCatalog() with os.makedirs error."""
-        self.mox.StubOutWithMock(appleupdates.os, 'makedirs')
-        self.mox.StubOutWithMock(appleupdates.os.path, 'exists')
+        self.mox.StubOutWithMock(appleupdates.os, "makedirs")
+        self.mox.StubOutWithMock(appleupdates.os.path, "exists")
 
         appleupdates.os.path.exists(self.au.local_catalog_dir).AndReturn(False)
-        appleupdates.os.makedirs(self.au.local_catalog_dir).AndRaise(
-            OSError)
+        appleupdates.os.makedirs(self.au.local_catalog_dir).AndRaise(OSError)
 
         self.mox.ReplayAll()
         self.assertRaises(
-            appleupdates.ReplicationError,
-            self.au.ExtractAndCopyDownloadedCatalog)
+            appleupdates.ReplicationError, self.au.ExtractAndCopyDownloadedCatalog
+        )
         self.mox.VerifyAll()
 
     def testExtractAndCopyDownloadedCatalogPlaintextCatalog(self):
         """Tests ExtractAndCopyDownloadedCatalog() with plain-text catalog."""
-        self.mox.StubOutWithMock(appleupdates.os.path, 'exists')
+        self.mox.StubOutWithMock(appleupdates.os.path, "exists")
 
         appleupdates.os.path.exists(self.au.local_catalog_dir).AndReturn(True)
         local_apple_sus_catalog = appleupdates.os.path.join(
-            self.au.local_catalog_dir,
-            appleupdates.APPLE_EXTRACTED_CATALOG_NAME)
+            self.au.local_catalog_dir, appleupdates.APPLE_EXTRACTED_CATALOG_NAME
+        )
 
-        contents = 'non-gzipped text'
+        contents = "non-gzipped text"
         mock_open = self.mox.CreateMockAnything()
         mock_file = self.mox.CreateMockAnything()
-        mock_open(self.au.apple_download_catalog_path, 'rb').AndReturn(
-            mock_file)
+        mock_open(self.au.apple_download_catalog_path, "rb").AndReturn(mock_file)
         mock_file.read(2).AndReturn(contents)
         mock_file.seek(0).AndReturn(None)
         mock_file.read().AndReturn(contents)
         mock_file.close().AndReturn(None)
-        mock_open(local_apple_sus_catalog, 'wb').AndReturn(mock_file)
+        mock_open(local_apple_sus_catalog, "wb").AndReturn(mock_file)
         mock_file.write(contents)
         mock_file.close()
 
@@ -774,26 +788,26 @@ class TestAppleUpdates(mox.MoxTestBase):
 
     def testExtractAndCopyDownloadedCatalogGzippedCatalog(self):
         """Tests ExtractAndCopyDownloadedCatalog() with gzipped catalog."""
-        self.mox.StubOutWithMock(appleupdates.os.path, 'exists')
-        self.mox.StubOutWithMock(appleupdates.gzip, 'open')
+        self.mox.StubOutWithMock(appleupdates.os.path, "exists")
+        self.mox.StubOutWithMock(appleupdates.gzip, "open")
 
         appleupdates.os.path.exists(self.au.local_catalog_dir).AndReturn(True)
         local_apple_sus_catalog = appleupdates.os.path.join(
-            self.au.local_catalog_dir,
-            appleupdates.APPLE_EXTRACTED_CATALOG_NAME)
+            self.au.local_catalog_dir, appleupdates.APPLE_EXTRACTED_CATALOG_NAME
+        )
 
-        contents = 'gzipped text'
+        contents = "gzipped text"
         mock_open = self.mox.CreateMockAnything()
         mock_file = self.mox.CreateMockAnything()
-        mock_open(self.au.apple_download_catalog_path, 'rb').AndReturn(
-            mock_file)
-        mock_file.read(2).AndReturn('\x1f\x8b')
+        mock_open(self.au.apple_download_catalog_path, "rb").AndReturn(mock_file)
+        mock_file.read(2).AndReturn("\x1f\x8b")
         mock_file.close().AndReturn(None)
-        appleupdates.gzip.open(
-            self.au.apple_download_catalog_path, 'rb').AndReturn(mock_file)
+        appleupdates.gzip.open(self.au.apple_download_catalog_path, "rb").AndReturn(
+            mock_file
+        )
         mock_file.read().AndReturn(contents)
         mock_file.close()
-        mock_open(local_apple_sus_catalog, 'wb').AndReturn(mock_file)
+        mock_open(local_apple_sus_catalog, "wb").AndReturn(mock_file)
         mock_file.write(contents)
         mock_file.close()
 
@@ -803,39 +817,38 @@ class TestAppleUpdates(mox.MoxTestBase):
 
     def testGetAppleCatalogURLMunki(self):
         """Tests _GetAppleCatalogURL() with Munki's pref."""
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'pref')
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "pref")
 
-        appleupdates.munkicommon.pref('SoftwareUpdateServerURL').AndReturn(
-            'url')
+        appleupdates.munkicommon.pref("SoftwareUpdateServerURL").AndReturn("url")
 
         self.mox.ReplayAll()
-        self.assertEqual('url', self.au._GetAppleCatalogURL())
+        self.assertEqual("url", self.au._GetAppleCatalogURL())
         self.mox.VerifyAll()
 
     def testGetAppleCatalogURLSoftwareUpdateOrMCX(self):
         """Tests _GetAppleCatalogURL() with SoftwareUpdate.plist or MCX pref."""
-        self.mox.StubOutWithMock(self.au, 'GetSoftwareUpdatePref')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'pref')
+        self.mox.StubOutWithMock(self.au, "GetSoftwareUpdatePref")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "pref")
 
-        appleupdates.munkicommon.pref('SoftwareUpdateServerURL').AndReturn(None)
-        self.au.GetSoftwareUpdatePref('CatalogURL').AndReturn('url')
+        appleupdates.munkicommon.pref("SoftwareUpdateServerURL").AndReturn(None)
+        self.au.GetSoftwareUpdatePref("CatalogURL").AndReturn("url")
 
         self.mox.ReplayAll()
-        self.assertEqual('url', self.au._GetAppleCatalogURL())
+        self.assertEqual("url", self.au._GetAppleCatalogURL())
         self.mox.VerifyAll()
 
     def testGetAppleCatalogURLDefault(self):
         """Tests _GetAppleCatalogURL() with default URL."""
-        self.mox.StubOutWithMock(self.au, 'GetSoftwareUpdatePref')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'pref')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'getOsVersion')
+        self.mox.StubOutWithMock(self.au, "GetSoftwareUpdatePref")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "pref")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "getOsVersion")
 
         # Grab the first os_version/url combo to use for this test.
         os_version = appleupdates.DEFAULT_CATALOG_URLS.keys()[0]
         url = appleupdates.DEFAULT_CATALOG_URLS[os_version]
 
-        appleupdates.munkicommon.pref('SoftwareUpdateServerURL').AndReturn(None)
-        self.au.GetSoftwareUpdatePref('CatalogURL').AndReturn(None)
+        appleupdates.munkicommon.pref("SoftwareUpdateServerURL").AndReturn(None)
+        self.au.GetSoftwareUpdatePref("CatalogURL").AndReturn(None)
         appleupdates.munkicommon.getOsVersion().AndReturn(os_version)
 
         self.mox.ReplayAll()
@@ -844,40 +857,41 @@ class TestAppleUpdates(mox.MoxTestBase):
 
     def testGetAppleCatalogURLNotFound(self):
         """Tests _GetAppleCatalogURL() when the catalog URL is not found."""
-        self.mox.StubOutWithMock(self.au, 'GetSoftwareUpdatePref')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'pref')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'getOsVersion')
+        self.mox.StubOutWithMock(self.au, "GetSoftwareUpdatePref")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "pref")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "getOsVersion")
 
-        appleupdates.munkicommon.pref('SoftwareUpdateServerURL').AndReturn(None)
-        self.au.GetSoftwareUpdatePref('CatalogURL').AndReturn(None)
-        appleupdates.munkicommon.getOsVersion().AndReturn('UKNOWN OS VERSION!')
+        appleupdates.munkicommon.pref("SoftwareUpdateServerURL").AndReturn(None)
+        self.au.GetSoftwareUpdatePref("CatalogURL").AndReturn(None)
+        appleupdates.munkicommon.getOsVersion().AndReturn("UKNOWN OS VERSION!")
 
         self.mox.ReplayAll()
         self.assertRaises(
-            appleupdates.CatalogNotFoundError, self.au._GetAppleCatalogURL)
+            appleupdates.CatalogNotFoundError, self.au._GetAppleCatalogURL
+        )
         self.mox.VerifyAll()
 
     def testCacheAppleCatalog(self):
         """Tests CacheAppleCatalog()."""
         self._MockMunkiDisplay()
-        self.mox.StubOutWithMock(self.au, '_GetAppleCatalogURL')
-        self.mox.StubOutWithMock(self.au, 'ExtractAndCopyDownloadedCatalog')
-        self.mox.StubOutWithMock(appleupdates.os, 'makedirs')
-        self.mox.StubOutWithMock(appleupdates.os.path, 'exists')
-        self.mox.StubOutWithMock(self.au, 'GetSoftwareUpdateResource')
+        self.mox.StubOutWithMock(self.au, "_GetAppleCatalogURL")
+        self.mox.StubOutWithMock(self.au, "ExtractAndCopyDownloadedCatalog")
+        self.mox.StubOutWithMock(appleupdates.os, "makedirs")
+        self.mox.StubOutWithMock(appleupdates.os.path, "exists")
+        self.mox.StubOutWithMock(self.au, "GetSoftwareUpdateResource")
 
-        url = 'url'
+        url = "url"
         self.au._GetAppleCatalogURL().AndReturn(url)
         appleupdates.os.path.exists(self.au.temp_cache_dir).AndReturn(False)
         appleupdates.os.makedirs(self.au.temp_cache_dir).AndReturn(None)
 
         appleupdates.munkicommon.display_status_major(
-            'Checking Apple Software Update catalog...')
-        appleupdates.munkicommon.display_detail(
-            'Caching CatalogURL %s', url)
+            "Checking Apple Software Update catalog..."
+        )
+        appleupdates.munkicommon.display_detail("Caching CatalogURL %s", url)
         self.au.GetSoftwareUpdateResource(
-            url, self.au.apple_download_catalog_path, resume=True).AndReturn(
-                0)
+            url, self.au.apple_download_catalog_path, resume=True
+        ).AndReturn(0)
         self.au.ExtractAndCopyDownloadedCatalog().AndReturn(None)
 
         self.mox.ReplayAll()
@@ -887,107 +901,108 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testCacheAppleCatalogWithBadCatalogURL(self):
         """Tests CacheAppleCatalog() with a bad catalog URL."""
         self._MockMunkiDisplay()
-        self.mox.StubOutWithMock(self.au, '_GetAppleCatalogURL')
+        self.mox.StubOutWithMock(self.au, "_GetAppleCatalogURL")
 
-        exc = appleupdates.CatalogNotFoundError('foo error')
+        exc = appleupdates.CatalogNotFoundError("foo error")
         self.au._GetAppleCatalogURL().AndRaise(exc)
-        appleupdates.munkicommon.display_error('foo error')
+        appleupdates.munkicommon.display_error("foo error")
 
         self.mox.ReplayAll()
-        self.assertRaises(
-            appleupdates.CatalogNotFoundError, self.au.CacheAppleCatalog)
+        self.assertRaises(appleupdates.CatalogNotFoundError, self.au.CacheAppleCatalog)
         self.mox.VerifyAll()
 
     def testCacheAppleCatalogMakedirsError(self):
         """Tests CacheAppleCatalog() with os.makedirs error."""
         self._MockMunkiDisplay()
-        self.mox.StubOutWithMock(self.au, '_GetAppleCatalogURL')
-        self.mox.StubOutWithMock(appleupdates.os, 'makedirs')
-        self.mox.StubOutWithMock(appleupdates.os.path, 'exists')
+        self.mox.StubOutWithMock(self.au, "_GetAppleCatalogURL")
+        self.mox.StubOutWithMock(appleupdates.os, "makedirs")
+        self.mox.StubOutWithMock(appleupdates.os.path, "exists")
 
-        self.au._GetAppleCatalogURL().AndReturn('url')
+        self.au._GetAppleCatalogURL().AndReturn("url")
         appleupdates.os.path.exists(self.au.temp_cache_dir).AndReturn(False)
         appleupdates.os.makedirs(self.au.temp_cache_dir).AndRaise(OSError)
 
         self.mox.ReplayAll()
-        self.assertRaises(
-            appleupdates.ReplicationError, self.au.CacheAppleCatalog)
+        self.assertRaises(appleupdates.ReplicationError, self.au.CacheAppleCatalog)
         self.mox.VerifyAll()
 
     def testCacheAppleCatalogMunkiDownloadError(self):
         """Tests CacheAppleCatalog() with a MunkiDownloadError."""
         self._MockMunkiDisplay()
-        self.mox.StubOutWithMock(self.au, '_GetAppleCatalogURL')
-        self.mox.StubOutWithMock(self.au, 'ExtractAndCopyDownloadedCatalog')
-        self.mox.StubOutWithMock(appleupdates.os, 'makedirs')
-        self.mox.StubOutWithMock(appleupdates.os.path, 'exists')
-        self.mox.StubOutWithMock(self.au, 'GetSoftwareUpdateResource')
+        self.mox.StubOutWithMock(self.au, "_GetAppleCatalogURL")
+        self.mox.StubOutWithMock(self.au, "ExtractAndCopyDownloadedCatalog")
+        self.mox.StubOutWithMock(appleupdates.os, "makedirs")
+        self.mox.StubOutWithMock(appleupdates.os.path, "exists")
+        self.mox.StubOutWithMock(self.au, "GetSoftwareUpdateResource")
 
-        url = 'url'
+        url = "url"
         self.au._GetAppleCatalogURL().AndReturn(url)
         appleupdates.os.path.exists(self.au.temp_cache_dir).AndReturn(False)
         appleupdates.os.makedirs(self.au.temp_cache_dir).AndReturn(None)
 
         appleupdates.munkicommon.display_status_major(
-            'Checking Apple Software Update catalog...')
-        appleupdates.munkicommon.display_detail(
-            'Caching CatalogURL %s', url)
+            "Checking Apple Software Update catalog..."
+        )
+        appleupdates.munkicommon.display_detail("Caching CatalogURL %s", url)
         self.au.GetSoftwareUpdateResource(
-            url, self.au.apple_download_catalog_path, resume=True).AndRaise(
-                appleupdates.fetch.MunkiDownloadError)
+            url, self.au.apple_download_catalog_path, resume=True
+        ).AndRaise(appleupdates.fetch.MunkiDownloadError)
 
         self.mox.ReplayAll()
         self.assertRaises(
-            appleupdates.fetch.MunkiDownloadError,
-            self.au.CacheAppleCatalog)
+            appleupdates.fetch.MunkiDownloadError, self.au.CacheAppleCatalog
+        )
         self.mox.VerifyAll()
 
-    def _InstalledApplePackagesHaveChangedHelper(
-        self, old_checksum, new_checksum):
+    def _InstalledApplePackagesHaveChangedHelper(self, old_checksum, new_checksum):
         """Helper method for InstalledApplePackagesHaveChanged() testing."""
-        self.mox.StubOutWithMock(appleupdates.subprocess, 'Popen')
-        self.mox.StubOutWithMock(appleupdates.hashlib, 'sha256')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'pref')
+        self.mox.StubOutWithMock(appleupdates.subprocess, "Popen")
+        self.mox.StubOutWithMock(appleupdates.hashlib, "sha256")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "pref")
 
-        cmd = ['/usr/sbin/pkgutil', '--regexp', '-pkg-info-plist',
-               'com\.apple\.*']
-        output = 'output!'
+        cmd = ["/usr/sbin/pkgutil", "--regexp", "-pkg-info-plist", r"com\.apple\.*"]
+        output = "output!"
 
         mock_proc = self.mox.CreateMockAnything()
         appleupdates.subprocess.Popen(
-            cmd, shell=False, bufsize=1,
+            cmd,
+            shell=False,
+            bufsize=1,
             stdin=appleupdates.subprocess.PIPE,
             stdout=appleupdates.subprocess.PIPE,
-            stderr=appleupdates.subprocess.PIPE).AndReturn(mock_proc)
-        mock_proc.communicate().AndReturn((output, 'unused foo'))
+            stderr=appleupdates.subprocess.PIPE,
+        ).AndReturn(mock_proc)
+        mock_proc.communicate().AndReturn((output, "unused foo"))
         mock_hash = self.mox.CreateMockAnything()
         appleupdates.hashlib.sha256(output).AndReturn(mock_hash)
         mock_hash.hexdigest().AndReturn(new_checksum)
-        appleupdates.munkicommon.pref(
-            'InstalledApplePackagesChecksum').AndReturn(old_checksum)
+        appleupdates.munkicommon.pref("InstalledApplePackagesChecksum").AndReturn(
+            old_checksum
+        )
         if old_checksum != new_checksum:
-            self.mox.StubOutWithMock(appleupdates.munkicommon, 'set_pref')
+            self.mox.StubOutWithMock(appleupdates.munkicommon, "set_pref")
             appleupdates.munkicommon.set_pref(
-                'InstalledApplePackagesChecksum', new_checksum)
+                "InstalledApplePackagesChecksum", new_checksum
+            )
 
         self.mox.ReplayAll()
         if old_checksum == new_checksum:
-          self.assertFalse(self.au.InstalledApplePackagesHaveChanged())
+            self.assertFalse(self.au.InstalledApplePackagesHaveChanged())
         else:
-          self.assertTrue(self.au.InstalledApplePackagesHaveChanged())
+            self.assertTrue(self.au.InstalledApplePackagesHaveChanged())
         self.mox.VerifyAll()
 
     def testInstalledApplePackagesHaveChangedWhenNoChange(self):
         """Tests InstalledApplePackagesHaveChanged() when haven't changed."""
-        self._InstalledApplePackagesHaveChangedHelper('zzzz', 'zzzz')
+        self._InstalledApplePackagesHaveChangedHelper("zzzz", "zzzz")
 
     def testInstalledApplePackagesHaveChangedWhenChanged(self):
         """Tests InstalledApplePackagesHaveChanged() when they have changed."""
-        self._InstalledApplePackagesHaveChangedHelper('asdf', 'zzzz')
+        self._InstalledApplePackagesHaveChangedHelper("asdf", "zzzz")
 
     def testAvailableUpdatesAreDownloadedNoUpdateInfo(self):
         """Tests AvailableUpdatesAreDownloaded() when update info is empty."""
-        self.mox.StubOutWithMock(self.au, 'GetSoftwareUpdateInfo')
+        self.mox.StubOutWithMock(self.au, "GetSoftwareUpdateInfo")
         self.au.GetSoftwareUpdateInfo().AndReturn(None)
 
         self.mox.ReplayAll()
@@ -996,83 +1011,90 @@ class TestAppleUpdates(mox.MoxTestBase):
 
     def testIsForceCheckNeccessaryWithChangedHash(self):
         """Tests _IsForceCheckNeccessary() when the hash has changed."""
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'getsha256hash')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'log')
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "getsha256hash")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "log")
 
         appleupdates.munkicommon.getsha256hash(
-            self.au.apple_download_catalog_path).AndReturn('omg changed hash')
-        appleupdates.munkicommon.log('Apple update catalog has changed.')
+            self.au.apple_download_catalog_path
+        ).AndReturn("omg changed hash")
+        appleupdates.munkicommon.log("Apple update catalog has changed.")
 
         self.mox.ReplayAll()
-        self.assertTrue(self.au._IsForceCheckNeccessary('outdated hash'))
+        self.assertTrue(self.au._IsForceCheckNeccessary("outdated hash"))
         self.mox.VerifyAll()
 
     def testIsForceCheckNeccessaryWhenInstalledPackagesHaveChanged(self):
         """Tests _IsForceCheckNeccessary() when installed pkgs have changed."""
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'getsha256hash')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'log')
-        self.mox.StubOutWithMock(self.au, 'InstalledApplePackagesHaveChanged')
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "getsha256hash")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "log")
+        self.mox.StubOutWithMock(self.au, "InstalledApplePackagesHaveChanged")
 
         appleupdates.munkicommon.getsha256hash(
-            self.au.apple_download_catalog_path).AndReturn('hash')
+            self.au.apple_download_catalog_path
+        ).AndReturn("hash")
         self.au.InstalledApplePackagesHaveChanged().AndReturn(True)
-        appleupdates.munkicommon.log('Installed Apple packages have changed.')
+        appleupdates.munkicommon.log("Installed Apple packages have changed.")
 
         self.mox.ReplayAll()
-        self.assertTrue(self.au._IsForceCheckNeccessary('hash'))
+        self.assertTrue(self.au._IsForceCheckNeccessary("hash"))
         self.mox.VerifyAll()
 
     def testIsForceCheckNeccessaryWhenAvailableUpdatesAreNotDownloaded(self):
         """Tests _IsForceCheckNeccessary(); new updates aren't downloaded."""
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'getsha256hash')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'log')
-        self.mox.StubOutWithMock(self.au, 'InstalledApplePackagesHaveChanged')
-        self.mox.StubOutWithMock(self.au, 'AvailableUpdatesAreDownloaded')
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "getsha256hash")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "log")
+        self.mox.StubOutWithMock(self.au, "InstalledApplePackagesHaveChanged")
+        self.mox.StubOutWithMock(self.au, "AvailableUpdatesAreDownloaded")
 
         appleupdates.munkicommon.getsha256hash(
-            self.au.apple_download_catalog_path).AndReturn('hash')
+            self.au.apple_download_catalog_path
+        ).AndReturn("hash")
         self.au.InstalledApplePackagesHaveChanged().AndReturn(False)
         self.au.AvailableUpdatesAreDownloaded().AndReturn(False)
         appleupdates.munkicommon.log(
-            'Downloaded updates do not match our list of available updates.')
+            "Downloaded updates do not match our list of available updates."
+        )
 
         self.mox.ReplayAll()
-        self.assertTrue(self.au._IsForceCheckNeccessary('hash'))
+        self.assertTrue(self.au._IsForceCheckNeccessary("hash"))
         self.mox.VerifyAll()
 
     def testIsForceCheckNeccessaryWhenForceIsNotNeeded(self):
         """Tests _IsForceCheckNeccessary() when force is not needed."""
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'getsha256hash')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'log')
-        self.mox.StubOutWithMock(self.au, 'InstalledApplePackagesHaveChanged')
-        self.mox.StubOutWithMock(self.au, 'AvailableUpdatesAreDownloaded')
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "getsha256hash")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "log")
+        self.mox.StubOutWithMock(self.au, "InstalledApplePackagesHaveChanged")
+        self.mox.StubOutWithMock(self.au, "AvailableUpdatesAreDownloaded")
 
         appleupdates.munkicommon.getsha256hash(
-            self.au.apple_download_catalog_path).AndReturn('hash')
+            self.au.apple_download_catalog_path
+        ).AndReturn("hash")
         self.au.InstalledApplePackagesHaveChanged().AndReturn(False)
         self.au.AvailableUpdatesAreDownloaded().AndReturn(True)
 
         self.mox.ReplayAll()
-        self.assertFalse(self.au._IsForceCheckNeccessary('hash'))
+        self.assertFalse(self.au._IsForceCheckNeccessary("hash"))
         self.mox.VerifyAll()
 
-    def _CheckForSoftwareUpdatesCacheAppleCatalogExceptionHelper(
-        self, exc, s=''):
+    def _CheckForSoftwareUpdatesCacheAppleCatalogExceptionHelper(self, exc, s=""):
         """Helper method for CheckForSoftwareUpdates() exception handling."""
         self._MockMunkiDisplay()
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'getsha256hash')
-        self.mox.StubOutWithMock(self.au, 'CacheAppleCatalog')
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "getsha256hash")
+        self.mox.StubOutWithMock(self.au, "CacheAppleCatalog")
 
         appleupdates.munkicommon.getsha256hash(
-            self.au.apple_download_catalog_path).AndReturn(None)
+            self.au.apple_download_catalog_path
+        ).AndReturn(None)
         self.au.CacheAppleCatalog().AndRaise(exc(s))
         if exc == appleupdates.ReplicationError:
             appleupdates.munkicommon.display_warning(
-                'Could not download Apple SUS catalog:')
-            appleupdates.munkicommon.display_warning('\t%s', s)
+                "Could not download Apple SUS catalog:"
+            )
+            appleupdates.munkicommon.display_warning("\t%s", s)
         elif exc == appleupdates.fetch.MunkiDownloadError:
             appleupdates.munkicommon.display_warning(
-                'Could not download Apple SUS catalog.')
+                "Could not download Apple SUS catalog."
+            )
 
         self.mox.ReplayAll()
         self.assertFalse(self.au.CheckForSoftwareUpdates())
@@ -1081,54 +1103,60 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testCheckForSoftwareUpdatesCatalogNotFound(self):
         """Tests CheckForSoftwareUpdates() with CatalogNotFoundError."""
         self._CheckForSoftwareUpdatesCacheAppleCatalogExceptionHelper(
-            appleupdates.CatalogNotFoundError)
+            appleupdates.CatalogNotFoundError
+        )
 
     def testCheckForSoftwareUpdatesReplicationError(self):
         """Tests CheckForSoftwareUpdates() with ReplicationError."""
         self._CheckForSoftwareUpdatesCacheAppleCatalogExceptionHelper(
-            appleupdates.ReplicationError, s='foo error')
+            appleupdates.ReplicationError, s="foo error"
+        )
 
     def testCheckForSoftwareUpdatesMunkiDownloadError(self):
         """Tests CheckForSoftwareUpdates() with MunkiDownloadError."""
         self._CheckForSoftwareUpdatesCacheAppleCatalogExceptionHelper(
-            appleupdates.fetch.MunkiDownloadError)
+            appleupdates.fetch.MunkiDownloadError
+        )
 
     def testCheckForSoftwareUpdatesWhenForceCheckNotNeeded(self):
         """Tests CheckForSoftwareUpdates() when a force check is not needed."""
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'getsha256hash')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'log')
-        self.mox.StubOutWithMock(self.au, 'CacheAppleCatalog')
-        self.mox.StubOutWithMock(self.au, '_IsForceCheckNeccessary')
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "getsha256hash")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "log")
+        self.mox.StubOutWithMock(self.au, "CacheAppleCatalog")
+        self.mox.StubOutWithMock(self.au, "_IsForceCheckNeccessary")
 
         appleupdates.munkicommon.getsha256hash(
-            self.au.apple_download_catalog_path).AndReturn('hash')
+            self.au.apple_download_catalog_path
+        ).AndReturn("hash")
         self.au.CacheAppleCatalog().AndReturn(None)
-        self.au._IsForceCheckNeccessary('hash').AndReturn(False)
+        self.au._IsForceCheckNeccessary("hash").AndReturn(False)
         appleupdates.munkicommon.log(
-            '    Skipping Apple Software Update check because sucatalog is '
-            'unchanged, installed Apple packages are unchanged and we '
-            'recently did a full check.')
+            "    Skipping Apple Software Update check because sucatalog is "
+            "unchanged, installed Apple packages are unchanged and we "
+            "recently did a full check."
+        )
         self.mox.ReplayAll()
         self.assertFalse(self.au.CheckForSoftwareUpdates(force_check=False))
         self.mox.VerifyAll()
 
     def testCheckForSoftwareUpdatesWhenUpdateListEmpty(self):
         """Tests CheckForSoftwareUpdates() when updatelist is empty."""
-        self.mox.StubOutWithMock(self.au, 'CacheAppleCatalog')
-        self.mox.StubOutWithMock(self.au, 'GetAvailableUpdateProductIDs')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'getsha256hash')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'set_pref')
+        self.mox.StubOutWithMock(self.au, "CacheAppleCatalog")
+        self.mox.StubOutWithMock(self.au, "GetAvailableUpdateProductIDs")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "getsha256hash")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "set_pref")
         # Cannot stub out the builtin date() method, so stub the entire module.
         mock_nsdate_module = self.mox.CreateMockAnything()
-        self.mox.StubOutWithMock(appleupdates, 'NSDate', mock_nsdate_module)
+        self.mox.StubOutWithMock(appleupdates, "NSDate", mock_nsdate_module)
         mock_nsdate_module.date = self.mox.CreateMockAnything()
 
         appleupdates.munkicommon.getsha256hash(
-            self.au.apple_download_catalog_path).AndReturn('hash')
+            self.au.apple_download_catalog_path
+        ).AndReturn("hash")
         self.au.CacheAppleCatalog().AndReturn(None)
         self.au.GetAvailableUpdateProductIDs().AndReturn([])
-        appleupdates.NSDate.date().AndReturn('d')
-        appleupdates.munkicommon.set_pref('LastAppleSoftwareUpdateCheck', 'd')
+        appleupdates.NSDate.date().AndReturn("d")
+        appleupdates.munkicommon.set_pref("LastAppleSoftwareUpdateCheck", "d")
 
         self.mox.ReplayAll()
         self.assertFalse(self.au.CheckForSoftwareUpdates())
@@ -1137,25 +1165,28 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testCheckForSoftwareUpdatesWhenCacheUpdateMetadataError(self):
         """Tests CheckForSoftwareUpdates() when CacheUpdateMetadata() fails."""
         self._MockMunkiDisplay()
-        self.mox.StubOutWithMock(self.au, 'CacheAppleCatalog')
-        self.mox.StubOutWithMock(self.au, 'GetAvailableUpdateProductIDs')
-        self.mox.StubOutWithMock(self.au, '_WriteFilteredCatalog')
-        self.mox.StubOutWithMock(self.au, 'CacheUpdateMetadata')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'getsha256hash')
+        self.mox.StubOutWithMock(self.au, "CacheAppleCatalog")
+        self.mox.StubOutWithMock(self.au, "GetAvailableUpdateProductIDs")
+        self.mox.StubOutWithMock(self.au, "_WriteFilteredCatalog")
+        self.mox.StubOutWithMock(self.au, "CacheUpdateMetadata")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "getsha256hash")
 
-        update_list = ['non-empty list']
+        update_list = ["non-empty list"]
 
         appleupdates.munkicommon.getsha256hash(
-            self.au.apple_download_catalog_path).AndReturn('hash')
+            self.au.apple_download_catalog_path
+        ).AndReturn("hash")
         self.au.CacheAppleCatalog().AndReturn(None)
         self.au.GetAvailableUpdateProductIDs().AndReturn(update_list)
         self.au._WriteFilteredCatalog(
-            update_list, self.au.filtered_catalog_path).AndReturn(None)
-        exc = appleupdates.ReplicationError('foo err')
+            update_list, self.au.filtered_catalog_path
+        ).AndReturn(None)
+        exc = appleupdates.ReplicationError("foo err")
         self.au.CacheUpdateMetadata().AndRaise(exc)
         appleupdates.munkicommon.display_warning(
-            'Could not replicate software update metadata:')
-        appleupdates.munkicommon.display_warning('\t%s', 'foo err')
+            "Could not replicate software update metadata:"
+        )
+        appleupdates.munkicommon.display_warning("\t%s", "foo err")
 
         self.mox.ReplayAll()
         self.assertFalse(self.au.CheckForSoftwareUpdates())
@@ -1164,21 +1195,23 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testCheckForSoftwareUpdatesWhenDownloadAvailableUpdateFails(self):
         """Tests CheckForSoftwareUpdates() when DownloadAvailUpdates() fails."""
         self._MockMunkiDisplay()
-        self.mox.StubOutWithMock(self.au, 'CacheAppleCatalog')
-        self.mox.StubOutWithMock(self.au, 'GetAvailableUpdateProductIDs')
-        self.mox.StubOutWithMock(self.au, '_WriteFilteredCatalog')
-        self.mox.StubOutWithMock(self.au, 'CacheUpdateMetadata')
-        self.mox.StubOutWithMock(self.au, 'DownloadAvailableUpdates')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'getsha256hash')
+        self.mox.StubOutWithMock(self.au, "CacheAppleCatalog")
+        self.mox.StubOutWithMock(self.au, "GetAvailableUpdateProductIDs")
+        self.mox.StubOutWithMock(self.au, "_WriteFilteredCatalog")
+        self.mox.StubOutWithMock(self.au, "CacheUpdateMetadata")
+        self.mox.StubOutWithMock(self.au, "DownloadAvailableUpdates")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "getsha256hash")
 
-        update_list = ['non-empty list']
+        update_list = ["non-empty list"]
 
         appleupdates.munkicommon.getsha256hash(
-            self.au.apple_download_catalog_path).AndReturn('hash')
+            self.au.apple_download_catalog_path
+        ).AndReturn("hash")
         self.au.CacheAppleCatalog().AndReturn(None)
         self.au.GetAvailableUpdateProductIDs().AndReturn(update_list)
         self.au._WriteFilteredCatalog(
-            update_list, self.au.filtered_catalog_path).AndReturn(None)
+            update_list, self.au.filtered_catalog_path
+        ).AndReturn(None)
         self.au.CacheUpdateMetadata().AndReturn(None)
         self.au.DownloadAvailableUpdates().AndReturn(False)
 
@@ -1189,30 +1222,32 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testCheckForSoftwareUpdatesSuccess(self):
         """Tests CheckForSoftwareUpdates() success."""
         self._MockMunkiDisplay()
-        self.mox.StubOutWithMock(self.au, 'CacheAppleCatalog')
-        self.mox.StubOutWithMock(self.au, 'GetAvailableUpdateProductIDs')
-        self.mox.StubOutWithMock(self.au, '_WriteFilteredCatalog')
-        self.mox.StubOutWithMock(self.au, 'CacheUpdateMetadata')
-        self.mox.StubOutWithMock(self.au, 'DownloadAvailableUpdates')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'getsha256hash')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'set_pref')
+        self.mox.StubOutWithMock(self.au, "CacheAppleCatalog")
+        self.mox.StubOutWithMock(self.au, "GetAvailableUpdateProductIDs")
+        self.mox.StubOutWithMock(self.au, "_WriteFilteredCatalog")
+        self.mox.StubOutWithMock(self.au, "CacheUpdateMetadata")
+        self.mox.StubOutWithMock(self.au, "DownloadAvailableUpdates")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "getsha256hash")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "set_pref")
         # Cannot stub out the builtin date() method, so stub the entire module.
         mock_nsdate_module = self.mox.CreateMockAnything()
-        self.mox.StubOutWithMock(appleupdates, 'NSDate', mock_nsdate_module)
+        self.mox.StubOutWithMock(appleupdates, "NSDate", mock_nsdate_module)
         mock_nsdate_module.date = self.mox.CreateMockAnything()
 
-        update_list = ['non-empty list']
+        update_list = ["non-empty list"]
 
         appleupdates.munkicommon.getsha256hash(
-            self.au.apple_download_catalog_path).AndReturn('hash')
+            self.au.apple_download_catalog_path
+        ).AndReturn("hash")
         self.au.CacheAppleCatalog().AndReturn(None)
         self.au.GetAvailableUpdateProductIDs().AndReturn(update_list)
         self.au._WriteFilteredCatalog(
-            update_list, self.au.filtered_catalog_path).AndReturn(None)
+            update_list, self.au.filtered_catalog_path
+        ).AndReturn(None)
         self.au.CacheUpdateMetadata().AndReturn(None)
         self.au.DownloadAvailableUpdates().AndReturn(True)
-        appleupdates.NSDate.date().AndReturn('d')
-        appleupdates.munkicommon.set_pref('LastAppleSoftwareUpdateCheck', 'd')
+        appleupdates.NSDate.date().AndReturn("d")
+        appleupdates.munkicommon.set_pref("LastAppleSoftwareUpdateCheck", "d")
 
         self.mox.ReplayAll()
         self.assertTrue(self.au.CheckForSoftwareUpdates())
@@ -1221,15 +1256,16 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testAvailableUpdatesAreDownloadedFoundationPlistError(self):
         """Tests AvailableUpdatesAreDownloaded() when invalid index_plist."""
         self._MockFoundationPlist()
-        self.mox.StubOutWithMock(self.au, 'GetSoftwareUpdateInfo')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'log')
+        self.mox.StubOutWithMock(self.au, "GetSoftwareUpdateInfo")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "log")
 
-        index_plist = '/Library/Updates/index.plist'
+        index_plist = "/Library/Updates/index.plist"
         self.au.GetSoftwareUpdateInfo().AndReturn(True)
         exc = appleupdates.FoundationPlist.FoundationPlistException
         appleupdates.FoundationPlist.readPlist(index_plist).AndRaise(exc)
         appleupdates.munkicommon.log(
-            'Apple downloaded update index is invalid: %s' % index_plist)
+            "Apple downloaded update index is invalid: %s" % index_plist
+        )
 
         self.mox.ReplayAll()
         self.assertFalse(self.au.AvailableUpdatesAreDownloaded())
@@ -1238,30 +1274,33 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testAvailableUpdatesAreDownloadedWithProductIdNotDownloaded(self):
         """Tests AvailableUpdatesAreDownloaded(); product_id not downloaded."""
         self._MockFoundationPlist()
-        self.mox.StubOutWithMock(self.au, 'GetSoftwareUpdateInfo')
-        self.mox.StubOutWithMock(appleupdates.os.path, 'isdir')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'log')
+        self.mox.StubOutWithMock(self.au, "GetSoftwareUpdateInfo")
+        self.mox.StubOutWithMock(appleupdates.os.path, "isdir")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "log")
 
-        index_plist = '/Library/Updates/index.plist'
+        index_plist = "/Library/Updates/index.plist"
         apple_updates = [
-            {'productKey': '1', 'name': 'name1'},
-            {'productKey': '999', 'name': 'name999'},
-            {'NOTproductKey': 'boo', 'name': 'nameboo'},
+            {"productKey": "1", "name": "name1"},
+            {"productKey": "999", "name": "name999"},
+            {"NOTproductKey": "boo", "name": "nameboo"},
         ]
         download_index = {
-            'ProductPaths': {
-                '1': 'path1', '3': 'path3', '5': 'path5',
+            "ProductPaths": {
+                "1": "path1",
+                "3": "path3",
+                "5": "path5",
             }
         }
         self.au.GetSoftwareUpdateInfo().AndReturn(apple_updates)
         exc = appleupdates.FoundationPlist.FoundationPlistException
-        appleupdates.FoundationPlist.readPlist(index_plist).AndReturn(
-            download_index)
-        appleupdates.os.path.isdir(os.path.join(
-            '/Library/Updates', 'path1')).AndReturn(True)
-        appleupdates.os.path.isdir('/Library/Updates/').AndReturn(True)
+        appleupdates.FoundationPlist.readPlist(index_plist).AndReturn(download_index)
+        appleupdates.os.path.isdir(os.path.join("/Library/Updates", "path1")).AndReturn(
+            True
+        )
+        appleupdates.os.path.isdir("/Library/Updates/").AndReturn(True)
         appleupdates.munkicommon.log(
-            'Apple Update product is not downloaded: %s' % 'name999')
+            "Apple Update product is not downloaded: %s" % "name999"
+        )
 
         self.mox.ReplayAll()
         self.assertFalse(self.au.AvailableUpdatesAreDownloaded())
@@ -1270,31 +1309,35 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testAvailableUpdatesAreDownloadedWithNonExistentProductDir(self):
         """Tests AvailableUpdatesAreDownloaded(); non-existent product dir."""
         self._MockFoundationPlist()
-        self.mox.StubOutWithMock(self.au, 'GetSoftwareUpdateInfo')
-        self.mox.StubOutWithMock(appleupdates.os.path, 'isdir')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'log')
+        self.mox.StubOutWithMock(self.au, "GetSoftwareUpdateInfo")
+        self.mox.StubOutWithMock(appleupdates.os.path, "isdir")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "log")
 
-        index_plist = '/Library/Updates/index.plist'
+        index_plist = "/Library/Updates/index.plist"
         apple_updates = [
-            {'productKey': '1', 'name': 'name1'},
-            {'productKey': '3', 'name': 'name3'},
-            {'NOTproductKey': 'boo', 'name': 'nameboo'},
+            {"productKey": "1", "name": "name1"},
+            {"productKey": "3", "name": "name3"},
+            {"NOTproductKey": "boo", "name": "nameboo"},
         ]
         download_index = {
-            'ProductPaths': {
-                '1': 'path1', '3': 'path3', '5': 'path5',
+            "ProductPaths": {
+                "1": "path1",
+                "3": "path3",
+                "5": "path5",
             }
         }
         self.au.GetSoftwareUpdateInfo().AndReturn(apple_updates)
         exc = appleupdates.FoundationPlist.FoundationPlistException
-        appleupdates.FoundationPlist.readPlist(index_plist).AndReturn(
-            download_index)
-        appleupdates.os.path.isdir(os.path.join(
-            '/Library/Updates', 'path1')).AndReturn(True)
-        appleupdates.os.path.isdir(os.path.join(
-            '/Library/Updates', 'path3')).AndReturn(False)
+        appleupdates.FoundationPlist.readPlist(index_plist).AndReturn(download_index)
+        appleupdates.os.path.isdir(os.path.join("/Library/Updates", "path1")).AndReturn(
+            True
+        )
+        appleupdates.os.path.isdir(os.path.join("/Library/Updates", "path3")).AndReturn(
+            False
+        )
         appleupdates.munkicommon.log(
-            'Apple Update product directory is missing: %s' % 'name3')
+            "Apple Update product directory is missing: %s" % "name3"
+        )
 
         self.mox.ReplayAll()
         self.assertFalse(self.au.AvailableUpdatesAreDownloaded())
@@ -1303,29 +1346,32 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testAvailableUpdatesAreDownloadedSuccess(self):
         """Tests AvailableUpdatesAreDownloaded() with success."""
         self._MockFoundationPlist()
-        self.mox.StubOutWithMock(self.au, 'GetSoftwareUpdateInfo')
-        self.mox.StubOutWithMock(appleupdates.os.path, 'isdir')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'log')
+        self.mox.StubOutWithMock(self.au, "GetSoftwareUpdateInfo")
+        self.mox.StubOutWithMock(appleupdates.os.path, "isdir")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "log")
 
-        index_plist = '/Library/Updates/index.plist'
+        index_plist = "/Library/Updates/index.plist"
         apple_updates = [
-            {'productKey': '1', 'name': 'name1'},
-            {'productKey': '3', 'name': 'name3'},
-            {'NOTproductKey': 'boo', 'name': 'nameboo'},
+            {"productKey": "1", "name": "name1"},
+            {"productKey": "3", "name": "name3"},
+            {"NOTproductKey": "boo", "name": "nameboo"},
         ]
         download_index = {
-            'ProductPaths': {
-                '1': 'path1', '3': 'path3', '5': 'path5',
+            "ProductPaths": {
+                "1": "path1",
+                "3": "path3",
+                "5": "path5",
             }
         }
         self.au.GetSoftwareUpdateInfo().AndReturn(apple_updates)
         exc = appleupdates.FoundationPlist.FoundationPlistException
-        appleupdates.FoundationPlist.readPlist(index_plist).AndReturn(
-            download_index)
-        appleupdates.os.path.isdir(os.path.join(
-            '/Library/Updates', 'path1')).AndReturn(True)
-        appleupdates.os.path.isdir(os.path.join(
-            '/Library/Updates', 'path3')).AndReturn(True)
+        appleupdates.FoundationPlist.readPlist(index_plist).AndReturn(download_index)
+        appleupdates.os.path.isdir(os.path.join("/Library/Updates", "path1")).AndReturn(
+            True
+        )
+        appleupdates.os.path.isdir(os.path.join("/Library/Updates", "path3")).AndReturn(
+            True
+        )
 
         self.mox.ReplayAll()
         self.assertTrue(self.au.AvailableUpdatesAreDownloaded())
@@ -1334,41 +1380,62 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testGetSoftwareUpdateInfo(self):
         """Tests GetSoftwareUpdateInfo()."""
         self._MockFoundationPlist()
-        self.mox.StubOutWithMock(appleupdates.os.path, 'exists')
-        self.mox.StubOutWithMock(self.au, 'GetBlockingApps')
+        self.mox.StubOutWithMock(appleupdates.os.path, "exists")
+        self.mox.StubOutWithMock(self.au, "GetBlockingApps")
 
-        blocking_apps = ['blocking1', 'blocking2']
+        blocking_apps = ["blocking1", "blocking2"]
         applicable_updates = {
-            'phaseResultsArray': [
-                {'description': 'desc1', 'ignoreKey': 'name1',
-                 'version': 'ver1', 'name': 'display_name1', 'sizeInKB': 1000,
-                 'productKey': 'prodid1'},
-                {'description': 'desc2', 'ignoreKey': 'name2',
-                 'version': 'ver2', 'name': 'display_name2', 'sizeInKB': 2000,
-                 'productKey': 'prodid2', 'restartRequired': 'YES'},
+            "phaseResultsArray": [
+                {
+                    "description": "desc1",
+                    "ignoreKey": "name1",
+                    "version": "ver1",
+                    "name": "display_name1",
+                    "sizeInKB": 1000,
+                    "productKey": "prodid1",
+                },
+                {
+                    "description": "desc2",
+                    "ignoreKey": "name2",
+                    "version": "ver2",
+                    "name": "display_name2",
+                    "sizeInKB": 2000,
+                    "productKey": "prodid2",
+                    "restartRequired": "YES",
+                },
             ]
         }
         expected_output = [
-            {'blocking_applications': blocking_apps,
-             'description': 'desc1', 'name': 'name1',
-             'version_to_install': 'ver1', 'display_name': 'display_name1',
-             'installed_size': 1000, 'productKey': 'prodid1'},
-            {'description': 'desc2', 'name': 'name2',
-             'version_to_install': 'ver2', 'display_name': 'display_name2',
-             'installed_size': 2000, 'productKey': 'prodid2',
-             'RestartAction': 'RequireRestart'},
+            {
+                "blocking_applications": blocking_apps,
+                "description": "desc1",
+                "name": "name1",
+                "version_to_install": "ver1",
+                "display_name": "display_name1",
+                "installed_size": 1000,
+                "productKey": "prodid1",
+            },
+            {
+                "description": "desc2",
+                "name": "name2",
+                "version_to_install": "ver2",
+                "display_name": "display_name2",
+                "installed_size": 2000,
+                "productKey": "prodid2",
+                "RestartAction": "RequireRestart",
+            },
         ]
 
-        appleupdates.os.path.exists(self.au.applicable_updates_plist).AndReturn(
-            True)
+        appleupdates.os.path.exists(self.au.applicable_updates_plist).AndReturn(True)
         appleupdates.FoundationPlist.readPlist(
-            self.au.applicable_updates_plist).AndReturn(applicable_updates)
+            self.au.applicable_updates_plist
+        ).AndReturn(applicable_updates)
         self.au.GetBlockingApps(
-            applicable_updates['phaseResultsArray'][0]['productKey']).AndReturn(
-                blocking_apps)
+            applicable_updates["phaseResultsArray"][0]["productKey"]
+        ).AndReturn(blocking_apps)
         self.au.GetBlockingApps(
-            applicable_updates['phaseResultsArray'][1]['productKey']).AndReturn(
-                [])
+            applicable_updates["phaseResultsArray"][1]["productKey"]
+        ).AndReturn([])
 
         self.mox.ReplayAll()
         self.assertEqual(expected_output, self.au.GetSoftwareUpdateInfo())
@@ -1376,10 +1443,9 @@ class TestAppleUpdates(mox.MoxTestBase):
 
     def testGetSoftwareUpdateInfoWhenApplicableUpdatesDoesntExist(self):
         """Tests GetSoftwareUpdateInfo(); Applicable Updates does not exist."""
-        self.mox.StubOutWithMock(appleupdates.os.path, 'exists')
+        self.mox.StubOutWithMock(appleupdates.os.path, "exists")
 
-        appleupdates.os.path.exists(self.au.applicable_updates_plist).AndReturn(
-            False)
+        appleupdates.os.path.exists(self.au.applicable_updates_plist).AndReturn(False)
         self.mox.ReplayAll()
         self.assertEqual([], self.au.GetSoftwareUpdateInfo())
         self.mox.VerifyAll()
@@ -1387,11 +1453,11 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testWriteAppleUpdatesFile(self):
         """Tests WriteAppleUpdatesFile()."""
         self._MockFoundationPlist()
-        self.mox.StubOutWithMock(self.au, 'GetSoftwareUpdateInfo')
-        self.au.GetSoftwareUpdateInfo().AndReturn('appleupdates')
+        self.mox.StubOutWithMock(self.au, "GetSoftwareUpdateInfo")
+        self.au.GetSoftwareUpdateInfo().AndReturn("appleupdates")
         appleupdates.FoundationPlist.writePlist(
-            {'AppleUpdates': 'appleupdates'},
-            self.au.apple_updates_plist).AndReturn(None)
+            {"AppleUpdates": "appleupdates"}, self.au.apple_updates_plist
+        ).AndReturn(None)
         self.mox.ReplayAll()
         self.assertTrue(self.au.WriteAppleUpdatesFile())
         self.mox.VerifyAll()
@@ -1399,8 +1465,8 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testWriteAppleUpdatesFileFailure(self):
         """Tests WriteAppleUpdatesFile() with failure."""
         self._MockFoundationPlist()
-        self.mox.StubOutWithMock(self.au, 'GetSoftwareUpdateInfo')
-        self.mox.StubOutWithMock(appleupdates.os, 'unlink')
+        self.mox.StubOutWithMock(self.au, "GetSoftwareUpdateInfo")
+        self.mox.StubOutWithMock(appleupdates.os, "unlink")
         self.au.GetSoftwareUpdateInfo().AndReturn(None)
         appleupdates.os.unlink(self.au.apple_updates_plist).AndRaise(OSError)
 
@@ -1414,31 +1480,40 @@ class TestAppleUpdates(mox.MoxTestBase):
         self._MockMunkiDisplay()
         appleupdates.munkicommon.report = {}
 
-        apple_updates = {'AppleUpdates': [
-            {'display_name': 'name1', 'version_to_install': 'ver1',
-             'RestartAction': 'RequireRestart'},
-            {'display_name': 'name2', 'version_to_install': 'ver2',
-             'RestartAction': 'RequireLogout'},
-            {'display_name': 'name3', 'version_to_install': 'ver3'},
-        ]}
+        apple_updates = {
+            "AppleUpdates": [
+                {
+                    "display_name": "name1",
+                    "version_to_install": "ver1",
+                    "RestartAction": "RequireRestart",
+                },
+                {
+                    "display_name": "name2",
+                    "version_to_install": "ver2",
+                    "RestartAction": "RequireLogout",
+                },
+                {"display_name": "name3", "version_to_install": "ver3"},
+            ]
+        }
 
-        appleupdates.FoundationPlist.readPlist(
-            self.au.apple_updates_plist).AndReturn(apple_updates)
+        appleupdates.FoundationPlist.readPlist(self.au.apple_updates_plist).AndReturn(
+            apple_updates
+        )
         appleupdates.munkicommon.display_info(
-            'The following Apple Software Updates are available to install:')
-        appleupdates.munkicommon.display_info('    + %s-%s' % ('name1', 'ver1'))
-        appleupdates.munkicommon.display_info('       *Restart required')
-        appleupdates.munkicommon.display_info('    + %s-%s' % ('name2', 'ver2'))
-        appleupdates.munkicommon.display_info('       *Logout required')
-        appleupdates.munkicommon.display_info('    + %s-%s' % ('name3', 'ver3'))
+            "The following Apple Software Updates are available to install:"
+        )
+        appleupdates.munkicommon.display_info("    + {}-{}".format("name1", "ver1"))
+        appleupdates.munkicommon.display_info("       *Restart required")
+        appleupdates.munkicommon.display_info("    + {}-{}".format("name2", "ver2"))
+        appleupdates.munkicommon.display_info("       *Logout required")
+        appleupdates.munkicommon.display_info("    + {}-{}".format("name3", "ver3"))
 
         self.mox.ReplayAll()
-        self.assertTrue(
-            'RestartRequired' not in appleupdates.munkicommon.report)
-        self.assertTrue('LogoutRequired' not in appleupdates.munkicommon.report)
+        self.assertTrue("RestartRequired" not in appleupdates.munkicommon.report)
+        self.assertTrue("LogoutRequired" not in appleupdates.munkicommon.report)
         self.au.DisplayAppleUpdateInfo()
-        self.assertTrue(appleupdates.munkicommon.report['RestartRequired'])
-        self.assertTrue(appleupdates.munkicommon.report['LogoutRequired'])
+        self.assertTrue(appleupdates.munkicommon.report["RestartRequired"])
+        self.assertTrue(appleupdates.munkicommon.report["LogoutRequired"])
         self.mox.VerifyAll()
 
     def testDisplayAppleUpdateInfoWhenReadPlistFailed(self):
@@ -1447,10 +1522,12 @@ class TestAppleUpdates(mox.MoxTestBase):
         self._MockMunkiDisplay()
 
         exc = appleupdates.FoundationPlist.FoundationPlistException
-        appleupdates.FoundationPlist.readPlist(
-            self.au.apple_updates_plist).AndRaise(exc)
+        appleupdates.FoundationPlist.readPlist(self.au.apple_updates_plist).AndRaise(
+            exc
+        )
         appleupdates.munkicommon.display_error(
-            'Error reading: %s', self.au.apple_updates_plist)
+            "Error reading: %s", self.au.apple_updates_plist
+        )
 
         self.mox.ReplayAll()
         self.au.DisplayAppleUpdateInfo()
@@ -1458,13 +1535,12 @@ class TestAppleUpdates(mox.MoxTestBase):
 
     def testGetSoftwareUpdatePref(self):
         """Tests GetSoftwareUpdatePref()."""
-        self.mox.StubOutWithMock(appleupdates, 'CFPreferencesCopyAppValue')
-        pref_name = 'foo'
-        expected_return = 'bar'
+        self.mox.StubOutWithMock(appleupdates, "CFPreferencesCopyAppValue")
+        pref_name = "foo"
+        expected_return = "bar"
         appleupdates.CFPreferencesCopyAppValue(
-            pref_name,
-            appleupdates.APPLE_SOFTWARE_UPDATE_PREFS_DOMAIN
-            ).AndReturn(expected_return)
+            pref_name, appleupdates.APPLE_SOFTWARE_UPDATE_PREFS_DOMAIN
+        ).AndReturn(expected_return)
 
         self.mox.ReplayAll()
         self.au.GetSoftwareUpdatePref(pref_name)
@@ -1473,27 +1549,35 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testLeopardSetupSoftwareUpdateCheck(self):
         """Tests _LeopardSetupSoftwareUpdateCheck()."""
         self._MockMunkiDisplay()
-        self.mox.StubOutWithMock(appleupdates, 'CFPreferencesSetValue')
-        self.mox.StubOutWithMock(appleupdates, 'CFPreferencesAppSynchronize')
+        self.mox.StubOutWithMock(appleupdates, "CFPreferencesSetValue")
+        self.mox.StubOutWithMock(appleupdates, "CFPreferencesAppSynchronize")
         appleupdates.CFPreferencesSetValue(
-            'AgreedToLicenseAgreement', True,
+            "AgreedToLicenseAgreement",
+            True,
             appleupdates.APPLE_SOFTWARE_UPDATE_PREFS_DOMAIN,
             appleupdates.kCFPreferencesCurrentUser,
-            appleupdates.kCFPreferencesCurrentHost).AndReturn(None)
+            appleupdates.kCFPreferencesCurrentHost,
+        ).AndReturn(None)
         appleupdates.CFPreferencesSetValue(
-            'AutomaticDownload', True,
+            "AutomaticDownload",
+            True,
             appleupdates.APPLE_SOFTWARE_UPDATE_PREFS_DOMAIN,
             appleupdates.kCFPreferencesCurrentUser,
-            appleupdates.kCFPreferencesCurrentHost).AndReturn(None)
+            appleupdates.kCFPreferencesCurrentHost,
+        ).AndReturn(None)
         appleupdates.CFPreferencesSetValue(
-            'LaunchAppInBackground', True,
+            "LaunchAppInBackground",
+            True,
             appleupdates.APPLE_SOFTWARE_UPDATE_PREFS_DOMAIN,
             appleupdates.kCFPreferencesCurrentUser,
-            appleupdates.kCFPreferencesCurrentHost).AndReturn(None)
+            appleupdates.kCFPreferencesCurrentHost,
+        ).AndReturn(None)
         appleupdates.CFPreferencesAppSynchronize(
-            appleupdates.APPLE_SOFTWARE_UPDATE_PREFS_DOMAIN).AndReturn(None)
+            appleupdates.APPLE_SOFTWARE_UPDATE_PREFS_DOMAIN
+        ).AndReturn(None)
         appleupdates.munkicommon.display_warning(
-            'Error setting com.apple.SoftwareUpdate ByHost preferences.')
+            "Error setting com.apple.SoftwareUpdate ByHost preferences."
+        )
 
         self.mox.ReplayAll()
         self.au._LeopardSetupSoftwareUpdateCheck()
@@ -1504,29 +1588,31 @@ class TestAppleUpdates(mox.MoxTestBase):
 
     def testAppleSoftwareUpdatesAvailableWhenCheckNeeded(self):
         """Tests AppleSoftwareUpdatesAvailable() when check needed."""
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'stopRequested')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'pref')
-        self.mox.StubOutWithMock(self.au, 'CheckForSoftwareUpdates')
-        self.mox.StubOutWithMock(self.au, 'WriteAppleUpdatesFile')
-        self.mox.StubOutWithMock(self.au, 'DisplayAppleUpdateInfo')
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "stopRequested")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "pref")
+        self.mox.StubOutWithMock(self.au, "CheckForSoftwareUpdates")
+        self.mox.StubOutWithMock(self.au, "WriteAppleUpdatesFile")
+        self.mox.StubOutWithMock(self.au, "DisplayAppleUpdateInfo")
         # Cannot stub out the builtin NSDate methods, so stub the entire module.
         mock_nsdate_module = self.mox.CreateMockAnything()
-        self.mox.StubOutWithMock(appleupdates, 'NSDate', mock_nsdate_module)
+        self.mox.StubOutWithMock(appleupdates, "NSDate", mock_nsdate_module)
         mock_nsdate_new = self.mox.CreateMockAnything()
         mock_nsdate_datewithstring = self.mox.CreateMockAnything()
         mock_nsdate_module.new = mock_nsdate_new
         mock_nsdate_module.dateWithString_ = mock_nsdate_datewithstring
 
-        now_nsdate = NSDate.dateWithString_('2011-08-22 18:00:00 -400')
+        now_nsdate = NSDate.dateWithString_("2011-08-22 18:00:00 -400")
         appleupdates.NSDate.new().AndReturn(now_nsdate)
 
         # use a date barely older than the 24 hour threshold.
-        recent_date_str = '2011-08-21 17:59:00 -0400'
+        recent_date_str = "2011-08-21 17:59:00 -0400"
         recent_date_nsdate = NSDate.dateWithString_(recent_date_str)
-        appleupdates.munkicommon.pref('LastAppleSoftwareUpdateCheck').AndReturn(
-            recent_date_str)
+        appleupdates.munkicommon.pref("LastAppleSoftwareUpdateCheck").AndReturn(
+            recent_date_str
+        )
         appleupdates.NSDate.dateWithString_(recent_date_str).AndReturn(
-            recent_date_nsdate)
+            recent_date_nsdate
+        )
 
         self.au.CheckForSoftwareUpdates(force_check=True)
         appleupdates.munkicommon.stopRequested().AndReturn(False)
@@ -1535,35 +1621,38 @@ class TestAppleUpdates(mox.MoxTestBase):
 
         self.mox.ReplayAll()
         out = self.au.AppleSoftwareUpdatesAvailable(
-            force_check=False, suppress_check=False)
+            force_check=False, suppress_check=False
+        )
         self.assertTrue(out)
         self.mox.VerifyAll()
 
     def testAppleSoftwareUpdatesAvailableWhenRecentlyChecked(self):
         """Tests AppleSoftwareUpdatesAvailable() when recently check."""
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'stopRequested')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'pref')
-        self.mox.StubOutWithMock(self.au, 'CheckForSoftwareUpdates')
-        self.mox.StubOutWithMock(self.au, 'WriteAppleUpdatesFile')
-        self.mox.StubOutWithMock(self.au, 'DisplayAppleUpdateInfo')
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "stopRequested")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "pref")
+        self.mox.StubOutWithMock(self.au, "CheckForSoftwareUpdates")
+        self.mox.StubOutWithMock(self.au, "WriteAppleUpdatesFile")
+        self.mox.StubOutWithMock(self.au, "DisplayAppleUpdateInfo")
         # Cannot stub out the builtin NSDate methods, so stub the entire module.
         mock_nsdate_module = self.mox.CreateMockAnything()
-        self.mox.StubOutWithMock(appleupdates, 'NSDate', mock_nsdate_module)
+        self.mox.StubOutWithMock(appleupdates, "NSDate", mock_nsdate_module)
         mock_nsdate_new = self.mox.CreateMockAnything()
         mock_nsdate_datewithstring = self.mox.CreateMockAnything()
         mock_nsdate_module.new = mock_nsdate_new
         mock_nsdate_module.dateWithString_ = mock_nsdate_datewithstring
 
-        now_nsdate = NSDate.dateWithString_('2011-08-22 18:00:00 -400')
+        now_nsdate = NSDate.dateWithString_("2011-08-22 18:00:00 -400")
         appleupdates.NSDate.new().AndReturn(now_nsdate)
 
         # use a date barely newer than the 24 hour threshold.
-        recent_date_str = '2011-08-21 18:01:00 -0400'
+        recent_date_str = "2011-08-21 18:01:00 -0400"
         recent_date_nsdate = NSDate.dateWithString_(recent_date_str)
-        appleupdates.munkicommon.pref('LastAppleSoftwareUpdateCheck').AndReturn(
-            recent_date_str)
+        appleupdates.munkicommon.pref("LastAppleSoftwareUpdateCheck").AndReturn(
+            recent_date_str
+        )
         appleupdates.NSDate.dateWithString_(recent_date_str).AndReturn(
-            recent_date_nsdate)
+            recent_date_nsdate
+        )
 
         self.au.CheckForSoftwareUpdates(force_check=False)
         appleupdates.munkicommon.stopRequested().AndReturn(False)
@@ -1572,21 +1661,23 @@ class TestAppleUpdates(mox.MoxTestBase):
 
         self.mox.ReplayAll()
         out = self.au.AppleSoftwareUpdatesAvailable(
-            force_check=False, suppress_check=False)
+            force_check=False, suppress_check=False
+        )
         self.assertTrue(out)
         self.mox.VerifyAll()
 
     def testAppleSoftwareUpdatesAvailableWhenNsDateValueError(self):
         """Tests AppleSoftwareUpdatesAvailable() when ValueError is raised."""
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'stopRequested')
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'pref')
-        self.mox.StubOutWithMock(self.au, 'CheckForSoftwareUpdates')
-        self.mox.StubOutWithMock(self.au, 'WriteAppleUpdatesFile')
-        self.mox.StubOutWithMock(self.au, 'DisplayAppleUpdateInfo')
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "stopRequested")
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "pref")
+        self.mox.StubOutWithMock(self.au, "CheckForSoftwareUpdates")
+        self.mox.StubOutWithMock(self.au, "WriteAppleUpdatesFile")
+        self.mox.StubOutWithMock(self.au, "DisplayAppleUpdateInfo")
 
         # use a date string that will not parse correctly.
-        appleupdates.munkicommon.pref('LastAppleSoftwareUpdateCheck').AndReturn(
-            'zomg this is not a date!!!!!')
+        appleupdates.munkicommon.pref("LastAppleSoftwareUpdateCheck").AndReturn(
+            "zomg this is not a date!!!!!"
+        )
 
         self.au.CheckForSoftwareUpdates(force_check=True)
         appleupdates.munkicommon.stopRequested().AndReturn(False)
@@ -1595,16 +1686,17 @@ class TestAppleUpdates(mox.MoxTestBase):
 
         self.mox.ReplayAll()
         out = self.au.AppleSoftwareUpdatesAvailable(
-            force_check=False, suppress_check=False)
+            force_check=False, suppress_check=False
+        )
         self.assertTrue(out)
         self.mox.VerifyAll()
 
     def testAppleSoftwareUpdatesAvailableForceCheck(self):
         """Tests AppleSoftwareUpdatesAvailable() with force_check=True."""
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'stopRequested')
-        self.mox.StubOutWithMock(self.au, 'CheckForSoftwareUpdates')
-        self.mox.StubOutWithMock(self.au, 'WriteAppleUpdatesFile')
-        self.mox.StubOutWithMock(self.au, 'DisplayAppleUpdateInfo')
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "stopRequested")
+        self.mox.StubOutWithMock(self.au, "CheckForSoftwareUpdates")
+        self.mox.StubOutWithMock(self.au, "WriteAppleUpdatesFile")
+        self.mox.StubOutWithMock(self.au, "DisplayAppleUpdateInfo")
 
         self.au.CheckForSoftwareUpdates(force_check=True)
         appleupdates.munkicommon.stopRequested().AndReturn(False)
@@ -1613,15 +1705,16 @@ class TestAppleUpdates(mox.MoxTestBase):
 
         self.mox.ReplayAll()
         out = self.au.AppleSoftwareUpdatesAvailable(
-            force_check=True, suppress_check=False)
+            force_check=True, suppress_check=False
+        )
         self.assertTrue(out)
         self.mox.VerifyAll()
 
     def testAppleSoftwareUpdatesAvailableSupressCheck(self):
         """Tests AppleSoftwareUpdatesAvailable() with suppress_check=True."""
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'stopRequested')
-        self.mox.StubOutWithMock(self.au, 'WriteAppleUpdatesFile')
-        self.mox.StubOutWithMock(self.au, 'DisplayAppleUpdateInfo')
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "stopRequested")
+        self.mox.StubOutWithMock(self.au, "WriteAppleUpdatesFile")
+        self.mox.StubOutWithMock(self.au, "DisplayAppleUpdateInfo")
 
         appleupdates.munkicommon.stopRequested().AndReturn(False)
         self.au.WriteAppleUpdatesFile().AndReturn(True)
@@ -1629,28 +1722,30 @@ class TestAppleUpdates(mox.MoxTestBase):
 
         self.mox.ReplayAll()
         out = self.au.AppleSoftwareUpdatesAvailable(
-            force_check=False, suppress_check=True)
+            force_check=False, suppress_check=True
+        )
         self.assertTrue(out)
         self.mox.VerifyAll()
 
     def testAppleSoftwareUpdatesAvailableSupressCheckNoneAvailable(self):
         """Tests AppleSoftwareUpdatesAvailable() when no updates available."""
-        self.mox.StubOutWithMock(appleupdates.munkicommon, 'stopRequested')
-        self.mox.StubOutWithMock(self.au, 'WriteAppleUpdatesFile')
-        self.mox.StubOutWithMock(self.au, 'DisplayAppleUpdateInfo')
+        self.mox.StubOutWithMock(appleupdates.munkicommon, "stopRequested")
+        self.mox.StubOutWithMock(self.au, "WriteAppleUpdatesFile")
+        self.mox.StubOutWithMock(self.au, "DisplayAppleUpdateInfo")
 
         appleupdates.munkicommon.stopRequested().AndReturn(False)
         self.au.WriteAppleUpdatesFile().AndReturn(False)
 
         self.mox.ReplayAll()
         out = self.au.AppleSoftwareUpdatesAvailable(
-            force_check=False, suppress_check=True)
+            force_check=False, suppress_check=True
+        )
         self.assertFalse(out)
         self.mox.VerifyAll()
 
     def testSoftwareUpdateListCached(self):
         """Tests SoftwareUpdateList() when update list is cached."""
-        self.au._update_list_cache = 'not none'
+        self.au._update_list_cache = "not none"
 
         output = self.au.SoftwareUpdateList()
         self.assertEqual(output, self.au._update_list_cache)
@@ -1658,38 +1753,45 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testSofwareUpdateList(self):
         """Tests SoftwareUpdateList() success."""
         self._MockMunkiDisplay()
-        self.mox.StubOutWithMock(appleupdates.subprocess, 'Popen')
+        self.mox.StubOutWithMock(appleupdates.subprocess, "Popen")
 
         process_output = (
-            '   * Foo Package 1\n'
-            '   * Bar Update 2\n'
+            "   * Foo Package 1\n"
+            "   * Bar Update 2\n"
             ' ignore more, because I do not start with "   * "\n'
-            '   * Zoo Install 3\n'
-            '   * Security Patch!\n'
+            "   * Zoo Install 3\n"
+            "   * Security Patch!\n"
         )
         expected_output = [
-            'Foo Package 1', 'Bar Update 2', 'Zoo Install 3', 'Security Patch!'
+            "Foo Package 1",
+            "Bar Update 2",
+            "Zoo Install 3",
+            "Security Patch!",
         ]
 
         appleupdates.munkicommon.display_detail(
-            'Getting list of available Apple Software Updates')
+            "Getting list of available Apple Software Updates"
+        )
         mock_process = self.mox.CreateMockAnything()
         appleupdates.subprocess.Popen(
-            ['/usr/sbin/softwareupdate', '-l'], shell=False, bufsize=1,
+            ["/usr/sbin/softwareupdate", "-l"],
+            shell=False,
+            bufsize=1,
             stdin=appleupdates.subprocess.PIPE,
             stdout=appleupdates.subprocess.PIPE,
-            stderr=appleupdates.subprocess.PIPE).AndReturn(mock_process)
-        mock_process.communicate().AndReturn((process_output, 'unused'))
+            stderr=appleupdates.subprocess.PIPE,
+        ).AndReturn(mock_process)
+        mock_process.communicate().AndReturn((process_output, "unused"))
         mock_process.returncode = 0
         appleupdates.munkicommon.display_detail(
-            'softwareupdate returned %d updates.' % 4)
+            "softwareupdate returned %d updates." % 4
+        )
 
         self.mox.ReplayAll()
         output = self.au.SoftwareUpdateList()
         self.assertTrue(self.au._update_list_cache is not None)
         self.assertEqual(output, expected_output)
         self.mox.VerifyAll()
-
 
 
 class TestAppleUpdatesModule(mox.MoxTestBase):
@@ -1706,12 +1808,13 @@ class TestAppleUpdatesModule(mox.MoxTestBase):
     def testGlobals(self):
         """Test global variables."""
         self.assertTrue(
-            type(getattr(appleupdates, 'DEFAULT_CATALOG_URLS', None)) is dict)
+            type(getattr(appleupdates, "DEFAULT_CATALOG_URLS", None)) is dict
+        )
 
 
 def main():
     unittest.main()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

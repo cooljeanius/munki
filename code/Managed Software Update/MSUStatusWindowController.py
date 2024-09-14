@@ -1,4 +1,3 @@
-# encoding: utf-8
 #
 #  MSUStatusWindowController.py
 #
@@ -32,8 +31,10 @@ import PyObjCTools
 
 debug = False
 
+
 class NSPropertyListSerializationException(Exception):
     pass
+
 
 def getLoginwindowPicture():
     desktopPicturePath = ''
@@ -51,12 +52,11 @@ def getLoginwindowPicture():
                         return theImage
                 return NSImage.imageNamed_("Solid Aqua Blue")
     theImage = NSImage.alloc().initWithContentsOfFile_(
-                        "/System/Library/CoreServices/DefaultDesktop.jpg")
+        "/System/Library/CoreServices/DefaultDesktop.jpg")
     if theImage:
         return theImage
     else:
         return NSImage.imageNamed_("Solid Aqua Blue")
-
 
 
 class MSUStatusWindowController(NSObject):
@@ -80,19 +80,18 @@ class MSUStatusWindowController(NSObject):
     session_started = False
     session_connected = False
 
-
     @objc.IBAction
     def stopBtnClicked_(self, sender):
         if debug:
-            NSLog(u"Stop button was clicked.")
+            NSLog("Stop button was clicked.")
         sender.setState_(1)
         self.stopBtnState = 1
         sender.setEnabled_(False)
 
     def startMunkiStatusSession(self):
-        NSLog(u"Managed Software Update.app PID: %s" % os.getpid())
+        NSLog("Managed Software Update.app PID: %s" % os.getpid())
         consoleuser = munki.getconsoleuser()
-        if consoleuser == None or consoleuser == u"loginwindow":
+        if consoleuser == None or consoleuser == "loginwindow":
             if self.backdropWindow:
                 self.backdropWindow.setCanBecomeVisibleWithoutLogin_(True)
                 self.backdropWindow.setLevel_(NSStatusWindowLevel)
@@ -104,13 +103,14 @@ class MSUStatusWindowController(NSObject):
                 self.backdropWindow.orderFrontRegardless()
 
         if self.window:
-            if consoleuser == None or consoleuser == u"loginwindow":
+            if consoleuser == None or consoleuser == "loginwindow":
                 # needed so the window can show over the loginwindow
                 self.window.setCanBecomeVisibleWithoutLogin_(True)
                 self.window.setLevel_(NSScreenSaverWindowLevel - 1)
             self.window.center()
-            self.messageFld.setStringValue_(NSLocalizedString(u"Starting…", None))
-            self.detailFld.setStringValue_(u"")
+            self.messageFld.setStringValue_(
+                NSLocalizedString("Starting…", None))
+            self.detailFld.setStringValue_("")
             self.stopBtn.setHidden_(False)
             self.stopBtn.setEnabled_(True)
             self.stopBtnState = 0
@@ -126,13 +126,12 @@ class MSUStatusWindowController(NSObject):
             self.window.orderFrontRegardless()
             # start our message processing thread
             NSThread.detachNewThreadSelector_toTarget_withObject_(
-                                                        self.handleSocket,
-                                                        self,
-                                                        None)
+                self.handleSocket,
+                self,
+                None)
 
             self.session_started = True
-            #NSApp.activateIgnoringOtherApps_(True)
-
+            # NSApp.activateIgnoringOtherApps_(True)
 
     def sessionStarted(self):
         return self.session_started
@@ -158,14 +157,14 @@ class MSUStatusWindowController(NSObject):
             conn.settimeout(None)
             self.session_connected = True
             if debug:
-                NSLog(u"Socket connection established.")
+                NSLog("Socket connection established.")
             buffer = ''
             keepLooping = True
             while keepLooping:
                 data = conn.recv(1024)
                 if not data:
                     # socket connection was closed, we should terminate.
-                    NSLog(u"Socket connection closed without QUIT message.")
+                    NSLog("Socket connection closed without QUIT message.")
                     socketSessionResult = -1
                     break
                 if debug:
@@ -179,8 +178,8 @@ class MSUStatusWindowController(NSObject):
                         if line.endswith('\n'):
                             command = line.decode('UTF-8').rstrip('\n')
                             if debug:
-                                NSLog(u"Socket received command: %s" % command)
-                            if command.startswith(u"QUIT: "):
+                                NSLog("Socket received command: %s" % command)
+                            if command.startswith("QUIT: "):
                                 keepLooping = False
                                 socketSessionResult = 0
                                 break
@@ -206,9 +205,9 @@ class MSUStatusWindowController(NSObject):
         self.window.orderOut_(self)
         self.session_started = False
         self.session_connected = False
-        #NSApp.delegate().munkiStatusSessionEnded_(socketSessionResult)
+        # NSApp.delegate().munkiStatusSessionEnded_(socketSessionResult)
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
-                self.socketEnded_,socketSessionResult, objc.NO)
+            self.socketEnded_, socketSessionResult, objc.NO)
 
         # Clean up autorelease pool
         del pool
@@ -217,42 +216,42 @@ class MSUStatusWindowController(NSObject):
         NSApp.delegate().munkiStatusSessionEnded_(socketSessionResult)
 
     def processSocketMsg_(self, message):
-        if message.startswith(u"ACTIVATE: "):
+        if message.startswith("ACTIVATE: "):
             NSApp.activateIgnoringOtherApps_(True)
             return ""
-        if message.startswith(u"HIDE: "):
+        if message.startswith("HIDE: "):
             self.window.orderOut_(self)
             return ""
-        if message.startswith(u"SHOW: "):
+        if message.startswith("SHOW: "):
             self.window.orderFront_(self)
             return ""
-        if message.startswith(u"TITLE: "):
+        if message.startswith("TITLE: "):
             self.window.setTitle_(message[7:])
             return ""
-        if message.startswith(u"MESSAGE: "):
+        if message.startswith("MESSAGE: "):
             self.messageFld.setStringValue_(message[9:])
             return ""
-        if message.startswith(u"DETAIL: "):
+        if message.startswith("DETAIL: "):
             self.detailFld.setStringValue_(message[8:])
             return ""
-        if message.startswith(u"PERCENT: "):
+        if message.startswith("PERCENT: "):
             self.setPercentageDone(message[9:])
             return ""
-        if message.startswith(u"GETSTOPBUTTONSTATE: "):
+        if message.startswith("GETSTOPBUTTONSTATE: "):
             return "%s\n" % self.stopBtnState
-        if message.startswith(u"HIDESTOPBUTTON: "):
+        if message.startswith("HIDESTOPBUTTON: "):
             self.stopBtn.setHidden_(True)
             return ""
-        if message.startswith(u"SHOWSTOPBUTTON: "):
+        if message.startswith("SHOWSTOPBUTTON: "):
             self.stopBtn.setHidden_(False)
             return ""
-        if message.startswith(u"ENABLESTOPBUTTON: "):
+        if message.startswith("ENABLESTOPBUTTON: "):
             self.stopBtn.setEnabled_(True)
             return ""
-        if message.startswith(u"DISABLESTOPBUTTON: "):
+        if message.startswith("DISABLESTOPBUTTON: "):
             self.stopBtn.setEnabled_(False)
             return ""
-        if message.startswith(u"RESTARTALERT: "):
+        if message.startswith("RESTARTALERT: "):
             self.doRestartAlert()
             while 1:
                 if self.restartAlertDismissed:
@@ -279,11 +278,10 @@ class MSUStatusWindowController(NSObject):
     def doRestartAlert(self):
         self.restartAlertDismissed = 0
         alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
-            NSLocalizedString(u"Restart Required", None),
-            NSLocalizedString(u"Restart", None),
+            NSLocalizedString("Restart Required", None),
+            NSLocalizedString("Restart", None),
             objc.nil,
             objc.nil,
-            NSLocalizedString(u"Software installed or removed requires a restart. You will have a chance to save open documents.", None))
+            NSLocalizedString("Software installed or removed requires a restart. You will have a chance to save open documents.", None))
         alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
             self.window, self, self.alertDidEnd_returnCode_contextInfo_, objc.nil)
-

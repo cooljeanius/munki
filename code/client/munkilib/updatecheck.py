@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# encoding: utf-8
 #
 # Copyright 2009-2011 Greg Neagle.
 #
@@ -22,18 +21,18 @@ Created by Greg Neagle on 2008-11-13.
 """
 
 # standard libs
-#import calendar
-#import errno
+# import calendar
+# import errno
 import datetime
 import os
-#import re
-#import shutil
+# import re
+# import shutil
 import subprocess
 import socket
-#import time
+# import time
 import urllib2
 import urlparse
-#import xattr
+# import xattr
 from OpenSSL.crypto import load_certificate, FILETYPE_PEM
 
 # our libs
@@ -49,6 +48,7 @@ from Foundation import NSDate, NSPredicate
 
 # This many hours before a force install deadline, start notifying the user.
 FORCE_INSTALL_WARNING_HOURS = 4
+
 
 def makeCatalogDB(catalogitems):
     """Takes an array of catalog items and builds some indexes so we can
@@ -108,7 +108,7 @@ def makeCatalogDB(catalogitems):
     # managed_install list (either directly or indirectly via included
     # manifests)
     autoremoveitems = [item.get('name') for item in catalogitems
-                            if item.get('autoremove')]
+                       if item.get('autoremove')]
     # convert to set and back to list to get list of unique names
     autoremoveitems = list(set(autoremoveitems))
 
@@ -139,15 +139,17 @@ def addPackageids(catalogitems, pkgid_table):
 
 
 INSTALLEDPKGS = {}
+
+
 def getInstalledPackages():
     """Builds a dictionary of installed receipts and their version number"""
-    #global INSTALLEDPKGS
+    # global INSTALLEDPKGS
 
     # we use the --regexp option to pkgutil to get it to return receipt
     # info for all installed packages.  Huge speed up.
     proc = subprocess.Popen(['/usr/sbin/pkgutil', '--regexp',
                              '--pkg-info-plist', '.*'], bufsize=8192,
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (out, unused_err) = proc.communicate()
     while out:
         (pliststr, out) = munkicommon.getFirstPlist(out)
@@ -155,7 +157,7 @@ def getInstalledPackages():
             plist = FoundationPlist.readPlistFromString(pliststr)
             if 'pkg-version' in plist and 'pkgid' in plist:
                 INSTALLEDPKGS[plist['pkgid']] = \
-                                        plist['pkg-version'] or '0.0.0.0.0'
+                    plist['pkg-version'] or '0.0.0.0.0'
         else:
             break
 
@@ -166,7 +168,7 @@ def getInstalledPackages():
         for item in installitems:
             if item.endswith('.pkg'):
                 pkginfo = munkicommon.getOnePackageInfo(
-                                        os.path.join(receiptsdir, item))
+                    os.path.join(receiptsdir, item))
                 pkgid = pkginfo.get('packageid')
                 thisversion = pkginfo.get('version')
                 if pkgid:
@@ -181,16 +183,18 @@ def getInstalledPackages():
                         # the newer package replaced the older one
                         storedversion = INSTALLEDPKGS[pkgid]
                         if (munkicommon.MunkiLooseVersion(thisversion) >
-                            munkicommon.MunkiLooseVersion(storedversion)):
+                                munkicommon.MunkiLooseVersion(storedversion)):
                             INSTALLEDPKGS[pkgid] = thisversion
 
 
 # global pkgdata
-PKGDATA  = {}
+PKGDATA = {}
+
+
 def analyzeInstalledPkgs():
     """Analyzed installed packages in an attempt to determine what is
        installed."""
-    #global PKGDATA
+    # global PKGDATA
     managed_pkgids = {}
     for catalogname in CATALOG.keys():
         catalogitems = CATALOG[catalogname]['items']
@@ -275,7 +279,7 @@ def compareVersions(thisvers, thatvers):
       2 if thisvers is newer than thatvers
     """
     if (munkicommon.MunkiLooseVersion(thisvers) <
-        munkicommon.MunkiLooseVersion(thatvers)):
+            munkicommon.MunkiLooseVersion(thatvers)):
         return -1
     elif (munkicommon.MunkiLooseVersion(thisvers) ==
           munkicommon.MunkiLooseVersion(thatvers)):
@@ -307,8 +311,8 @@ def compareApplicationVersion(app):
             return compareBundleVersion(app)
 
     # not in default location, so let's search:
-    name = app.get('CFBundleName','')
-    bundleid = app.get('CFBundleIdentifier','')
+    name = app.get('CFBundleName', '')
+    bundleid = app.get('CFBundleIdentifier', '')
     versionstring = app.get('CFBundleShortVersionString')
     minupvers = app.get('minimum_update_version')
 
@@ -332,7 +336,7 @@ def compareApplicationVersion(app):
             # Skip applications in /Users but not /Users/Shared, for now.
             if 'path' in item:
                 if item['path'].startswith('/Users/') and \
-                    not item['path'].startswith('/Users/Shared/'):
+                        not item['path'].startswith('/Users/Shared/'):
                     munkicommon.display_debug2(
                         'Skipped app %s with path %s',
                         item['name'], item['path'])
@@ -363,7 +367,7 @@ def compareApplicationVersion(app):
             if compareVersions(item['version'], minupvers) < 1:
                 munkicommon.display_debug1(
                     '\tVersion %s too old < %s' % (
-                            item['version'], minupvers))
+                        item['version'], minupvers))
                 # installed version is < minimum_update_version,
                 # too old to match
                 return 0
@@ -402,14 +406,14 @@ def compareBundleVersion(item):
         raise munkicommon.Error('Missing bundle path or version!')
 
     munkicommon.display_debug1('Checking bundle %s for version %s...' %
-                                (item['path'], vers))
+                               (item['path'], vers))
     filepath = os.path.join(item['path'], 'Contents', 'Info.plist')
     if not os.path.exists(filepath):
         munkicommon.display_debug1('\tNo Info.plist found at %s' % filepath)
         filepath = os.path.join(item['path'], 'Resources', 'Info.plist')
         if not os.path.exists(filepath):
             munkicommon.display_debug1(
-                                '\tNo Info.plist found at %s' % filepath)
+                '\tNo Info.plist found at %s' % filepath)
             return 0
 
     munkicommon.display_debug1('\tFound Info.plist at %s' % filepath)
@@ -451,7 +455,7 @@ def comparePlistVersion(item):
         raise munkicommon.Error('Missing plist path or version!')
 
     munkicommon.display_debug1('Checking %s for version %s...' %
-                                (filepath, vers))
+                               (filepath, vers))
     if not os.path.exists(filepath):
         munkicommon.display_debug1('\tNo plist found at %s' % filepath)
         return 0
@@ -505,7 +509,7 @@ def filesystemItemExists(item):
                 else:
                     munkicommon.display_debug2(
                         'Checksums differ: expected %s, got %s' %
-                         (storedchecksum, ondiskchecksum))
+                        (storedchecksum, ondiskchecksum))
                     return -1
             else:
                 return 1
@@ -567,7 +571,7 @@ def compareReceiptVersion(item):
         raise munkicommon.Error('Missing packageid or version info!')
 
     munkicommon.display_debug1('Looking for package %s, version %s' %
-                                (pkgid, vers))
+                               (pkgid, vers))
     installedvers = INSTALLEDPKGS.get(pkgid)
     if installedvers:
         return compareVersions(installedvers, vers)
@@ -631,7 +635,7 @@ def getInstalledVersion(item_plist):
                     for ai_item in appinfo:
                         if 'version' in ai_item:
                             if compareVersions(ai_item['version'],
-                                                maxversion) == 2:
+                                               maxversion) == 2:
                                 # version is higher
                                 maxversion = ai_item['version']
                     return maxversion
@@ -677,9 +681,9 @@ def download_installeritem(item_pl, installinfo, uninstalling=False):
 
     # allow pkginfo preferences to override system munki preferences
     downloadbaseurl = item_pl.get('PackageCompleteURL') or \
-                      item_pl.get('PackageURL') or \
-                      munkicommon.pref('PackageURL') or \
-                      munkicommon.pref('SoftwareRepoURL') + '/pkgs/'
+        item_pl.get('PackageURL') or \
+        munkicommon.pref('PackageURL') or \
+        munkicommon.pref('SoftwareRepoURL') + '/pkgs/'
 
     # build a URL, quoting the the location to encode reserved characters
     if item_pl.get('PackageCompleteURL'):
@@ -737,8 +741,8 @@ def isItemInInstallInfo(manifestitem_pl, thelist, vers=''):
                     return True
                 if item.get('installed'):
                     return True
-                #if the version already processed is the same or greater,
-                #then we're good
+                # if the version already processed is the same or greater,
+                # then we're good
                 if (compareVersions(
                         item.get('version_to_install'), vers) in (1, 2)):
                     return True
@@ -800,8 +804,8 @@ def getAllItemsWithName(name, cataloglist):
                         thisitem = CATALOG[catalogname]['items'][index]
                         if not thisitem in itemlist:
                             munkicommon.display_debug1(
-                             'Adding item %s, version %s from catalog %s...' %
-                                 (name, thisitem['version'], catalogname))
+                                'Adding item %s, version %s from catalog %s...' %
+                                (name, thisitem['version'], catalogname))
                             itemlist.append(thisitem)
 
     if itemlist:
@@ -824,7 +828,7 @@ def trimVersionString(version_string):
     version_parts = version_string.split('.')
     # strip off all trailing 0's in the version, while over 2 parts.
     while len(version_parts) > 2 and version_parts[-1] == '0':
-        del(version_parts[-1])
+        del (version_parts[-1])
     return '.'.join(version_parts)
 
 
@@ -851,7 +855,7 @@ def getItemDetail(name, cataloglist, vers=''):
         vers = 'latest'
 
     munkicommon.display_debug1('Looking for detail for: %s, version %s...' %
-                                (name, vers))
+                               (name, vers))
     rejected_items = []
     for catalogname in cataloglist:
         if not catalogname in CATALOG.keys():
@@ -887,13 +891,13 @@ def getItemDetail(name, cataloglist, vers=''):
                         'version %s ' % item['version'] +
                         'with minimum os version required %s' % min_os_vers)
                     munkicommon.display_debug1('Our OS version is %s' %
-                                                MACHINE['os_vers'])
+                                               MACHINE['os_vers'])
                     if (munkicommon.MunkiLooseVersion(MACHINE['os_vers']) <
                        munkicommon.MunkiLooseVersion(min_os_vers)):
                         # skip this one, go to the next
                         reason = (('Rejected item %s, version %s '
                                   'with minimum os version required %s. '
-                                  "Our OS version is %s.")
+                                   "Our OS version is %s.")
                                   % (item['name'], item['version'],
                                      item['minimum_os_version'],
                                      MACHINE['os_vers']))
@@ -907,13 +911,13 @@ def getItemDetail(name, cataloglist, vers=''):
                         'version %s ' % item['version'] +
                         'with maximum os version supported %s' % max_os_vers)
                     munkicommon.display_debug1('Our OS version is %s' %
-                                                MACHINE['os_vers'])
+                                               MACHINE['os_vers'])
                     if (munkicommon.MunkiLooseVersion(MACHINE['os_vers']) >
-                        munkicommon.MunkiLooseVersion(max_os_vers)):
+                            munkicommon.MunkiLooseVersion(max_os_vers)):
                         # skip this one, go to the next
                         reason = (('Rejected item %s, version %s '
                                   'with maximum os version required %s. '
-                                  'Our OS version is %s.')
+                                   'Our OS version is %s.')
                                   % (item['name'], item['version'],
                                      item['maximum_os_version'],
                                      MACHINE['os_vers']))
@@ -926,9 +930,9 @@ def getItemDetail(name, cataloglist, vers=''):
                         'Considering item %s, ' % item['name'] +
                         'version %s ' % item['version'] +
                         'with supported architectures: %s' %
-                                            item['supported_architectures'])
+                        item['supported_architectures'])
                     munkicommon.display_debug1('Our architecture is %s' %
-                                                MACHINE['arch'])
+                                               MACHINE['arch'])
                     for arch in item['supported_architectures']:
                         if arch == MACHINE['arch']:
                             # we found a supported architecture that matches
@@ -941,7 +945,7 @@ def getItemDetail(name, cataloglist, vers=''):
                         # matches this machine
                         reason = (('Rejected item %s, version %s '
                                   'with supported architectures: %s. '
-                                  'Our architecture is %s.')
+                                   'Our architecture is %s.')
                                   % (item['name'], item['version'],
                                      item['supported_architectures'],
                                      MACHINE['arch']))
@@ -974,7 +978,7 @@ def enoughDiskSpace(manifestitem_pl, installlist=None,
     installedsize = 0
     alreadydownloadedsize = 0
     if 'installer_item_location' in manifestitem_pl:
-        cachedir = os.path.join(munkicommon.pref('ManagedInstallDir'),'Cache')
+        cachedir = os.path.join(munkicommon.pref('ManagedInstallDir'), 'Cache')
         download = getDownloadCachePath(
             cachedir,
             manifestitem_pl['installer_item_location'])
@@ -992,7 +996,7 @@ def enoughDiskSpace(manifestitem_pl, installlist=None,
         if 'uninstaller_item_size' in manifestitem_pl:
             installeritemsize = int(manifestitem_pl['uninstaller_item_size'])
     diskspaceneeded = (installeritemsize - alreadydownloadedsize +
-                                                installedsize + fudgefactor)
+                       installedsize + fudgefactor)
 
     # munkicommon.getAvailableDiskSpace() returns KB
     availablediskspace = munkicommon.getAvailableDiskSpace()
@@ -1001,7 +1005,7 @@ def enoughDiskSpace(manifestitem_pl, installlist=None,
             # subtract space needed for other items that are to be installed
             if item.get('installer_item'):
                 availablediskspace = availablediskspace - \
-                                     int(item.get('installed_size', 0))
+                    int(item.get('installed_size', 0))
 
     if availablediskspace > diskspaceneeded:
         return True
@@ -1015,8 +1019,8 @@ def enoughDiskSpace(manifestitem_pl, installlist=None,
                                         'download and install %s.' %
                                         manifestitem_pl.get('name'))
         munkicommon.display_warning('    %sMB needed; %sMB available' %
-                                                  (diskspaceneeded/1024,
-                                                   availablediskspace/1024))
+                                    (diskspaceneeded/1024,
+                                     availablediskspace/1024))
     return False
 
 
@@ -1043,8 +1047,8 @@ def installedState(item_pl):
             return 0
         else:
             munkicommon.display_debug1(
-                 '%s is not in available Apple Software Updates' %
-                 item_pl['softwareupdatename'])
+                '%s is not in available Apple Software Updates' %
+                item_pl['softwareupdatename'])
             # return 1 so we're marked as not needing to be installed
             return 1
 
@@ -1137,7 +1141,7 @@ def evidenceThisIsInstalled(item_pl):
     the attention given to the uninstall method.
     """
     if ('installs' in item_pl and
-          item_pl.get('uninstall_method') != 'removepackages'):
+            item_pl.get('uninstall_method') != 'removepackages'):
         installitems = item_pl['installs']
         foundallinstallitems = True
         for item in installitems:
@@ -1180,8 +1184,8 @@ def getAutoRemovalItems(installinfo, cataloglist):
                         if item not in processed_installs_names
                         and item not in installinfo['processed_uninstalls']]
     return autoremovalnames
-    
-    
+
+
 def lookForUpdates(itemname, cataloglist):
     """Looks for updates for a given manifest item that is either
     installed or scheduled to be installed or removed. This handles not only
@@ -1217,7 +1221,8 @@ def lookForUpdates(itemname, cataloglist):
         num_updates = len(update_list)
         # format the update list for better on-screen viewing
         update_list_display = ", ".join(str(x) for x in update_list)
-        munkicommon.display_debug1('Found %s update(s): %s' % (num_updates, update_list_display))
+        munkicommon.display_debug1('Found %s update(s): %s' % (
+            num_updates, update_list_display))
 
     return update_list
 
@@ -1226,15 +1231,15 @@ def lookForUpdatesForVersion(itemname, itemversion, cataloglist):
     """Looks for updates for a specific version of an item. Since these
     can appear in manifests and pkginfo as item-version or item--version
     we have to search twice."""
-    
+
     name_and_version = '%s-%s' % (itemname, itemversion)
     alt_name_and_version = '%s--%s' % (itemname, itemversion)
     update_list = lookForUpdates(name_and_version, cataloglist)
     update_list.extend(lookForUpdates(alt_name_and_version, cataloglist))
-    
+
     # make sure the list has only unique items:
     update_list = list(set(update_list))
-    
+
     return update_list
 
 
@@ -1296,7 +1301,7 @@ def processOptionalInstall(manifestitem, cataloglist, installinfo):
     if manifestitemname in installinfo['optional_installs']:
         munkicommon.display_debug1(
             '%s has already been processed for optional install.' %
-                manifestitemname)
+            manifestitemname)
         return
     elif manifestitemname in installinfo['processed_installs']:
         munkicommon.display_debug1(
@@ -1314,7 +1319,7 @@ def processOptionalInstall(manifestitem, cataloglist, installinfo):
         if manifestitemname == item['name']:
             munkicommon.display_debug1(
                 '%s has already been processed for optional install.' %
-                    manifestitemname)
+                manifestitemname)
             return
 
     item_pl = getItemDetail(manifestitem, cataloglist)
@@ -1341,7 +1346,7 @@ def processOptionalInstall(manifestitem, cataloglist, installinfo):
         iteminfo['installer_item_size'] = \
             item_pl.get('installer_item_size', 0)
         iteminfo['installed_size'] = item_pl.get('installer_item_size',
-                                        iteminfo['installer_item_size'])
+                                                 iteminfo['installer_item_size'])
         if not enoughDiskSpace(item_pl,
                                installinfo.get('managed_installs', []),
                                warn=False):
@@ -1349,7 +1354,7 @@ def processOptionalInstall(manifestitem, cataloglist, installinfo):
                 'Insufficient disk space to download and install.'
 
     munkicommon.display_debug1(
-        "Adding %s to the optional install list" %   iteminfo['name'])
+        "Adding %s to the optional install list" % iteminfo['name'])
     installinfo['optional_installs'].append(iteminfo)
 
 
@@ -1372,12 +1377,12 @@ def processInstall(manifestitem, cataloglist, installinfo):
     munkicommon.display_debug1(
         '* Processing manifest item %s for install' % manifestitemname)
     (manifestitemname_withoutversion, includedversion) = nameAndVersion(
-                                            manifestitemname)
+        manifestitemname)
     # have we processed this already?
     if manifestitemname in installinfo['processed_installs']:
         munkicommon.display_debug1(
-                '%s has already been processed for install.' %
-                manifestitemname)
+            '%s has already been processed for install.' %
+            manifestitemname)
         return True
     elif (manifestitemname_withoutversion in
           installinfo['processed_uninstalls']):
@@ -1407,7 +1412,7 @@ def processInstall(manifestitem, cataloglist, installinfo):
                            vers=item_pl.get('version')):
         # has this item already been added to the list of things to install?
         munkicommon.display_debug1(
-                '%s is or will be installed.' % manifestitemname)
+            '%s is or will be installed.' % manifestitemname)
         return True
 
     # check dependencies
@@ -1439,9 +1444,9 @@ def processInstall(manifestitem, cataloglist, installinfo):
             dependencies = [dependencies]
         for item in dependencies:
             munkicommon.display_detail('%s-%s requires %s. '
-                                    'Getting info on %s...' %
-                                    (item_pl.get('name', manifestitemname),
-                                    item_pl.get('version',''), item, item))
+                                       'Getting info on %s...' %
+                                       (item_pl.get('name', manifestitemname),
+                                        item_pl.get('version', ''), item, item))
             success = processInstall(item, cataloglist, installinfo)
             if not success:
                 dependenciesMet = False
@@ -1461,9 +1466,9 @@ def processInstall(manifestitem, cataloglist, installinfo):
     if installed_state == 0:
         munkicommon.display_detail('Need to install %s' % manifestitemname)
         iteminfo['installer_item_size'] = item_pl.get(
-                                                'installer_item_size', 0)
+            'installer_item_size', 0)
         iteminfo['installed_size'] = item_pl.get('installed_size',
-                                            iteminfo['installer_item_size'])
+                                                 iteminfo['installer_item_size'])
         try:
             # Get a timestamp, then run download the installer item.
             start = datetime.datetime.now()
@@ -1492,12 +1497,12 @@ def processInstall(manifestitem, cataloglist, installinfo):
             iteminfo['installer_item'] = filename
             iteminfo['installed'] = False
             iteminfo['version_to_install'] = item_pl.get(
-                                                 'version','UNKNOWN')
+                'version', 'UNKNOWN')
 
             # we will ignore the unattended_install key if the item needs a
             # restart or logout...
             if (item_pl.get('unattended_install') or
-                item_pl.get('forced_install')):
+                    item_pl.get('forced_install')):
                 if item_pl.get('RestartAction'):
                     munkicommon.display_warning(
                         'Ignoring unattended_install key for %s '
@@ -1530,9 +1535,9 @@ def processInstall(manifestitem, cataloglist, installinfo):
                     iteminfo[key] = item_pl[key]
 
             installinfo['managed_installs'].append(iteminfo)
-            
+
             update_list = []
-            # (manifestitemname_withoutversion, includedversion) = 
+            # (manifestitemname_withoutversion, includedversion) =
             # nameAndVersion(manifestitemname)
             if includedversion:
                 # a specific version was specified in the manifest
@@ -1544,14 +1549,14 @@ def processInstall(manifestitem, cataloglist, installinfo):
                 # now look for all updates for this item
                 update_list = lookForUpdates(manifestitemname_withoutversion,
                                              cataloglist)
-                # now append any updates specifically 
+                # now append any updates specifically
                 # for the version to be installed
                 update_list.extend(
                     lookForUpdatesForVersion(
                         manifestitemname_withoutversion,
-                        iteminfo['version_to_install'], 
+                        iteminfo['version_to_install'],
                         cataloglist))
-            
+
             for update_item in update_list:
                 # call processInstall recursively so we get the
                 # latest version and dependencies
@@ -1585,7 +1590,7 @@ def processInstall(manifestitem, cataloglist, installinfo):
         iteminfo['installed'] = True
         # record installed size for reporting
         iteminfo['installed_size'] = item_pl.get('installed_size',
-            item_pl.get('installer_item_size',0))
+                                                 item_pl.get('installer_item_size', 0))
         if installed_state == 1:
             # just use the version from the pkginfo
             iteminfo['installed_version'] = item_pl['version']
@@ -1599,7 +1604,7 @@ def processInstall(manifestitem, cataloglist, installinfo):
         # remove included version number if any
         (name, includedversion) = nameAndVersion(manifestitemname)
         munkicommon.display_detail('%s version %s (or newer) is already '
-                                    'installed.' % (name, item_pl['version']))
+                                   'installed.' % (name, item_pl['version']))
         update_list = []
         if not includedversion:
             # no specific version is specified;
@@ -1613,7 +1618,7 @@ def processInstall(manifestitem, cataloglist, installinfo):
                     lookForUpdatesForVersion(
                         name, installed_version, cataloglist))
         elif compareVersions(
-            includedversion, iteminfo['installed_version']) == 1:
+                includedversion, iteminfo['installed_version']) == 1:
             # manifest specifies a specific version
             # if that's what's installed, look for any updates
             # specific to this version
@@ -1625,11 +1630,13 @@ def processInstall(manifestitem, cataloglist, installinfo):
             # and any dependencies
             unused_result = processInstall(update_item, cataloglist,
                                            installinfo)
-        
+
         return True
 
 
 INFO_OBJECT = {}
+
+
 def makePredicateInfoObject():
     '''Builds our info object used for predicate comparisons'''
     if INFO_OBJECT:
@@ -1776,7 +1783,7 @@ def processRemoval(manifestitem, cataloglist, installinfo):
         manifestitemname_withversion)
 
     (manifestitemname, includedversion) = nameAndVersion(
-                                            manifestitemname_withversion)
+        manifestitemname_withversion)
 
     # have we processed this already?
     if manifestitemname in [nameAndVersion(item)[0]
@@ -1800,7 +1807,7 @@ def processRemoval(manifestitem, cataloglist, installinfo):
     if includedversion:
         # a specific version was specified
         item_pl = getItemDetail(manifestitemname, cataloglist,
-                                                            includedversion)
+                                includedversion)
         if item_pl:
             infoitems.append(item_pl)
     else:
@@ -1818,7 +1825,7 @@ def processRemoval(manifestitem, cataloglist, installinfo):
     installEvidence = False
     for item in infoitems:
         munkicommon.display_debug2('Considering item %s-%s for removal info'
-                                    % (item['name'], item['version']))
+                                   % (item['name'], item['version']))
         if evidenceThisIsInstalled(item):
             installEvidence = True
             break
@@ -1828,7 +1835,7 @@ def processRemoval(manifestitem, cataloglist, installinfo):
 
     if not installEvidence:
         munkicommon.display_detail('%s doesn\'t appear to be installed.' %
-                                    manifestitemname_withversion)
+                                   manifestitemname_withversion)
         iteminfo = {}
         iteminfo['name'] = manifestitemname
         iteminfo['installed'] = False
@@ -1866,7 +1873,7 @@ def processRemoval(manifestitem, cataloglist, installinfo):
         # the uninstall info for the item couldn't be matched
         # to what's on disk
         munkicommon.display_warning('Could not find uninstall info for %s.' %
-                                     manifestitemname_withversion)
+                                    manifestitemname_withversion)
         return False
 
     # if we got this far, we have enough info to attempt an uninstall.
@@ -1897,11 +1904,11 @@ def processRemoval(manifestitem, cataloglist, installinfo):
             name = item_pl.get('name')
             if name not in processednames:
                 if 'requires' in item_pl:
-                    if (uninstall_item_name in item_pl['requires'] 
-                        or uninstall_item_name_with_version 
-                           in item_pl['requires']
-                        or alt_uninstall_item_name_with_version 
-                           in item_pl['requires']):
+                    if (uninstall_item_name in item_pl['requires']
+                        or uninstall_item_name_with_version
+                        in item_pl['requires']
+                        or alt_uninstall_item_name_with_version
+                            in item_pl['requires']):
                         munkicommon.display_debug1('%s requires %s, checking '
                                                    'to see if it\'s '
                                                    'installed...' %
@@ -1909,11 +1916,11 @@ def processRemoval(manifestitem, cataloglist, installinfo):
                                                     manifestitemname))
                         if evidenceThisIsInstalled(item_pl):
                             munkicommon.display_detail('%s requires %s. '
-                                                     '%s must be removed '
-                                                     'as well.' %
-                                                     (item_pl.get('name'),
-                                                      manifestitemname,
-                                                      item_pl.get('name')))
+                                                       '%s must be removed '
+                                                       'as well.' %
+                                                       (item_pl.get('name'),
+                                                        manifestitemname,
+                                                        item_pl.get('name')))
                             success = processRemoval(item_pl.get('name'),
                                                      cataloglist, installinfo)
                             if not success:
@@ -1937,7 +1944,7 @@ def processRemoval(manifestitem, cataloglist, installinfo):
     # we will ignore the unattended_uninstall key if the item needs a restart
     # or logout...
     if (uninstall_item.get('unattended_uninstall') or
-        uninstall_item.get('forced_uninstall')):
+            uninstall_item.get('forced_uninstall')):
         if uninstall_item.get('RestartAction'):
             munkicommon.display_warning(
                 'Ignoring unattended_uninstall key for %s '
@@ -1967,17 +1974,17 @@ def processRemoval(manifestitem, cataloglist, installinfo):
             # so we only remove packages if we're the last reference to it
             if pkg in PKGDATA['pkg_references']:
                 munkicommon.display_debug1('%s references are: %s' %
-                                            (pkg,
-                                             PKGDATA['pkg_references'][pkg]))
+                                           (pkg,
+                                            PKGDATA['pkg_references'][pkg]))
                 PKGDATA['pkg_references'][pkg].remove(iteminfo['name'])
                 if len(PKGDATA['pkg_references'][pkg]) == 0:
                     munkicommon.display_debug1('Adding %s to removal list.' %
-                                                pkg)
+                                               pkg)
                     packagesToReallyRemove.append(pkg)
             else:
                 # This shouldn't happen
                 munkicommon.display_warning('pkg id %s missing from pkgdata' %
-                                             pkg)
+                                            pkg)
         if packagesToReallyRemove:
             iteminfo['packages'] = packagesToReallyRemove
         else:
@@ -2000,7 +2007,7 @@ def processRemoval(manifestitem, cataloglist, installinfo):
                 filename = os.path.split(location)[1]
                 iteminfo['uninstaller_item'] = filename
                 iteminfo['adobe_package_name'] = \
-                        uninstall_item.get('adobe_package_name','')
+                    uninstall_item.get('adobe_package_name', '')
             except fetch.PackageVerificationError:
                 munkicommon.display_warning(
                     'Can\'t uninstall %s because the integrity check '
@@ -2017,7 +2024,7 @@ def processRemoval(manifestitem, cataloglist, installinfo):
         if uninstall_item.get('installs', None):
             iteminfo['remove_app_info'] = uninstall_item['installs'][0]
     elif uninstallmethod == 'uninstall_script':
-        iteminfo['uninstall_script'] = item.get('uninstall_script','')
+        iteminfo['uninstall_script'] = item.get('uninstall_script', '')
 
     # before we add this removal to the list,
     # check for installed updates and add them to the
@@ -2039,7 +2046,7 @@ def processRemoval(manifestitem, cataloglist, installinfo):
     installinfo['removals'].append(iteminfo)
     munkicommon.display_detail(
         'Removal of %s added to ManagedInstaller tasks.' %
-         manifestitemname_withversion)
+        manifestitemname_withversion)
     return True
 
 
@@ -2068,13 +2075,15 @@ def getManifestValueForKey(manifestpath, keyname):
 
 # global to hold our catalog DBs
 CATALOG = {}
+
+
 def getCatalogs(cataloglist):
     """Retrieves the catalogs from the server and populates our catalogs
     dictionary.
     """
-    #global CATALOG
+    # global CATALOG
     catalogbaseurl = munkicommon.pref('CatalogURL') or \
-                     munkicommon.pref('SoftwareRepoURL') + '/catalogs/'
+        munkicommon.pref('SoftwareRepoURL') + '/catalogs/'
     if not catalogbaseurl.endswith('?') and not catalogbaseurl.endswith('/'):
         catalogbaseurl = catalogbaseurl + '/'
     munkicommon.display_debug2('Catalog base URL is: %s' % catalogbaseurl)
@@ -2093,7 +2102,7 @@ def getCatalogs(cataloglist):
             except fetch.MunkiDownloadError, err:
                 munkicommon.display_error(
                     'Could not retrieve catalog %s from server.' %
-                     catalogname)
+                    catalogname)
                 munkicommon.display_error(err)
 
             else:
@@ -2124,16 +2133,19 @@ class ManifestException(Exception):
     manifest."""
     pass
 
+
 MANIFESTS = {}
+
+
 def getmanifest(partialurl, suppress_errors=False):
     """Gets a manifest from the server.
 
     Returns:
       string local path to the downloaded manifest.
     """
-    #global MANIFESTS
+    # global MANIFESTS
     manifestbaseurl = munkicommon.pref('ManifestURL') or \
-                      munkicommon.pref('SoftwareRepoURL') + '/manifests/'
+        munkicommon.pref('SoftwareRepoURL') + '/manifests/'
     if not manifestbaseurl.endswith('?') and \
        not manifestbaseurl.endswith('/'):
         manifestbaseurl = manifestbaseurl + '/'
@@ -2141,7 +2153,7 @@ def getmanifest(partialurl, suppress_errors=False):
                                 'manifests')
 
     if (partialurl.startswith('http://') or partialurl.startswith('https://')
-        or partialurl.startswith('file:/')):
+            or partialurl.startswith('file:/')):
         # then it's really a request for the client's primary manifest
         manifesturl = partialurl
         partialurl = 'client_manifest'
@@ -2165,7 +2177,7 @@ def getmanifest(partialurl, suppress_errors=False):
         if not suppress_errors:
             munkicommon.display_error(
                 'Could not retrieve manifest %s from the server.' %
-                 partialurl)
+                partialurl)
             munkicommon.display_error(str(err))
         return None
 
@@ -2190,7 +2202,7 @@ def getPrimaryManifest(alternate_id):
     """Gets the client manifest from the server."""
     manifest = ""
     manifesturl = munkicommon.pref('ManifestURL') or \
-                  munkicommon.pref('SoftwareRepoURL') + '/manifests/'
+        munkicommon.pref('SoftwareRepoURL') + '/manifests/'
     if not manifesturl.endswith('?') and not manifesturl.endswith('/'):
         manifesturl = manifesturl + '/'
     munkicommon.display_debug2('Manifest base URL is: %s' % manifesturl)
@@ -2198,7 +2210,7 @@ def getPrimaryManifest(alternate_id):
     clientidentifier = alternate_id or munkicommon.pref('ClientIdentifier')
 
     if not alternate_id and munkicommon.pref('UseClientCertificate') and \
-        munkicommon.pref('UseClientCertificateCNAsClientIdentifier'):
+            munkicommon.pref('UseClientCertificateCNAsClientIdentifier'):
         # we're to use the client cert CN as the clientidentifier
         if munkicommon.pref('UseClientCertificate'):
             # find the client cert
@@ -2230,15 +2242,15 @@ def getPrimaryManifest(alternate_id):
                 # try the short hostname
                 clientidentifier = hostname.split('.')[0]
                 munkicommon.display_detail('Request failed. Trying %s...' %
-                                            clientidentifier)
+                                           clientidentifier)
                 manifest = getmanifest(manifesturl + clientidentifier,
-                                        suppress_errors=True)
+                                       suppress_errors=True)
                 if not manifest:
                     # last resort - try for the site_default manifest
                     clientidentifier = 'site_default'
                     munkicommon.display_detail('Request failed. ' +
                                                'Trying %s...' %
-                                                clientidentifier)
+                                               clientidentifier)
 
         if not manifest:
             manifest = getmanifest(
@@ -2247,7 +2259,7 @@ def getPrimaryManifest(alternate_id):
             # record this info for later
             munkicommon.report['ManifestName'] = clientidentifier
             munkicommon.display_detail('Using manifest: %s' %
-                                        clientidentifier)
+                                       clientidentifier)
     except ManifestException:
         # bad manifests throw an exception
         pass
@@ -2324,8 +2336,11 @@ def getDownloadCachePath(destinationpathprefix, url):
     return os.path.join(
         destinationpathprefix, getInstallerItemBasename(url))
 
+
 MACHINE = {}
 CONDITIONS = {}
+
+
 def check(client_id='', localmanifestpath=None):
     """Checks for available new or updated managed software, downloading
     installer items if needed. Returns 1 if there are available updates,
@@ -2415,7 +2430,7 @@ def check(client_id='', localmanifestpath=None):
         # now process any self-serve choices
         usermanifest = '/Users/Shared/.SelfServeManifest'
         selfservemanifest = os.path.join(ManagedInstallDir, 'manifests',
-                                                'SelfServeManifest')
+                                         'SelfServeManifest')
         if os.path.exists(usermanifest):
             # copy user-generated SelfServeManifest to our
             # ManagedInstallDir
@@ -2440,13 +2455,13 @@ def check(client_id='', localmanifestpath=None):
         if os.path.exists(selfservemanifest):
             # use catalogs from main manifest for self-serve manifest
             cataloglist = getManifestValueForKey(
-                                            mainmanifestpath, 'catalogs')
+                mainmanifestpath, 'catalogs')
             munkicommon.display_detail(
                 '**Processing self-serve choices**')
             selfserveinstalls = getManifestValueForKey(selfservemanifest,
                                                        'managed_installs')
             available_optional_installs = [item['name']
-                for item in installinfo.get('optional_installs', [])]
+                                           for item in installinfo.get('optional_installs', [])]
             if selfserveinstalls:
                 # filter the list, removing any items not in the current list
                 # of available self-serve installs
@@ -2472,21 +2487,20 @@ def check(client_id='', localmanifestpath=None):
                     item['will_be_removed'] = True
 
         # filter managed_installs to get items already installed
-        installed_items = [item.get('name','')
-                            for item in installinfo['managed_installs']
-                                if item.get('installed')]
+        installed_items = [item.get('name', '')
+                           for item in installinfo['managed_installs']
+                           if item.get('installed')]
         # filter managed_installs to get problem items:
         # not installed, but no installer item
         problem_items = [item
-                            for item in installinfo['managed_installs']
-                                if item.get('installed') == False and
-                                    not item.get('installer_item')]
+                         for item in installinfo['managed_installs']
+                         if item.get('installed') == False and
+                         not item.get('installer_item')]
         # filter removals to get items already removed
         # (or never installed)
-        removed_items = [item.get('name','')
-                            for item in installinfo['removals']
-                                if item.get('installed') == False]
-
+        removed_items = [item.get('name', '')
+                         for item in installinfo['removals']
+                         if item.get('installed') == False]
 
         if os.path.exists(selfservemanifest):
             # for any item in the managed_uninstalls in the self-serve
@@ -2498,7 +2512,7 @@ def check(client_id='', localmanifestpath=None):
                 pass
             else:
                 plist['managed_uninstalls'] = \
-                    [item for item in plist.get('managed_uninstalls',[])
+                    [item for item in plist.get('managed_uninstalls', [])
                         if item not in removed_items]
                 try:
                     FoundationPlist.writePlist(plist, selfservemanifest)
@@ -2523,7 +2537,7 @@ def check(client_id='', localmanifestpath=None):
         # so they have only items that need action
         installinfo['managed_installs'] = \
             [item for item in installinfo['managed_installs']
-                    if item.get('installer_item')]
+             if item.get('installer_item')]
         installinfo['removals'] = \
             [item for item in installinfo['removals']
                 if item.get('installed')]
@@ -2568,7 +2582,7 @@ def check(client_id='', localmanifestpath=None):
                     os.unlink(os.path.join(cachedir, item))
             elif item not in cache_list:
                 munkicommon.display_detail(
-                                        'Removing %s from cache' % item)
+                    'Removing %s from cache' % item)
                 os.unlink(os.path.join(cachedir, item))
 
         # write out install list so our installer
@@ -2622,8 +2636,8 @@ def check(client_id='', localmanifestpath=None):
     for item in installinfo.get('managed_installs', []):
         if item.get('installer_item'):
             munkicommon.display_info('    + %s-%s' %
-                                     (item.get('name',''),
-                                      item.get('version_to_install','')))
+                                     (item.get('name', ''),
+                                      item.get('version_to_install', '')))
             if item.get('description'):
                 munkicommon.display_info('        %s' % item['description'])
             if item.get('RestartAction') == 'RequireRestart' or \
@@ -2703,7 +2717,7 @@ def checkForceInstallPackages():
 
     now = NSDate.date()
     now_xhours = NSDate.dateWithTimeIntervalSinceNow_(
-            FORCE_INSTALL_WARNING_HOURS * 3600)
+        FORCE_INSTALL_WARNING_HOURS * 3600)
     writeback = False
 
     for i in xrange(len(installinfo.get('managed_installs', []))):
@@ -2741,12 +2755,11 @@ def checkForceInstallPackages():
 
 
 def getResourceIfChangedAtomically(url,
-                                  destinationpath,
-                                  message=None,
-                                  resume=False,
-                                  expected_hash=None,
-                                  verify=False):
-
+                                   destinationpath,
+                                   message=None,
+                                   resume=False,
+                                   expected_hash=None,
+                                   verify=False):
     '''Gets a given URL from the Munki server. Sets up cert/CA info if it
     exists, and adds any additional headers'''
 
@@ -2776,7 +2789,7 @@ def getResourceIfChangedAtomically(url,
         if not client_cert_path:
             for name in ['cert.pem', 'client.pem', 'munki.pem']:
                 client_cert_path = os.path.join(ManagedInstallDir, 'certs',
-                                                                    name)
+                                                name)
                 if os.path.exists(client_cert_path):
                     break
     cert_info = {}
@@ -2813,4 +2826,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

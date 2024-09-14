@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# encoding: utf-8
 #
 # Copyright 2009-2011 Greg Neagle.
 #
@@ -61,8 +60,8 @@ def launchAndConnectToMunkiStatus():
         except IOError:
             # some problem; kill the socket
             SOCK = None
-    #else:
-        #raise Exception("Could not open connection to MunkiStatus.app")
+    # else:
+        # raise Exception("Could not open connection to MunkiStatus.app")
 
 
 def sendCommand(command_text):
@@ -106,7 +105,7 @@ def getMunkiStatusPID():
     '''Gets the process ID for Managed Software Update'''
     return utils.getPIDforProcessName(
         "Managed Software Update.app/Contents/MacOS/Managed Software Update") \
-    or utils.getPIDforProcessName(
+        or utils.getPIDforProcessName(
         "MunkiStatus.app/Contents/MacOS/MunkiStatus")
 
 
@@ -133,66 +132,66 @@ def getMunkiStatusSocket():
 
 def activate():
     '''Brings MunkiStatus window to the front.'''
-    sendCommand(u"ACTIVATE: \n")
+    sendCommand("ACTIVATE: \n")
 
 
 def hide():
     '''Hides MunkiStatus window.'''
-    sendCommand(u"HIDE: \n")
+    sendCommand("HIDE: \n")
 
 
 def show():
     '''Shows MunkiStatus window.'''
-    sendCommand(u"SHOW: \n")
+    sendCommand("SHOW: \n")
 
 
 def title(titleText):
     '''Sets the window title.'''
-    sendCommand(u"TITLE: %s\n" % titleText)
+    sendCommand("TITLE: %s\n" % titleText)
 
 
 def message(messageText):
     '''Sets the status message.'''
-    sendCommand(u"MESSAGE: %s\n" % messageText)
+    sendCommand("MESSAGE: %s\n" % messageText)
 
 
 def detail(detailsText):
     '''Sets the detail text.'''
-    sendCommand(u"DETAIL: %s\n" % detailsText)
+    sendCommand("DETAIL: %s\n" % detailsText)
 
 
 def percent(percentage):
     '''Sets the progress indicator to 0-100 percent done.
     If you pass a negative number, the progress indicator
     is shown as an indeterminate indicator (barber pole).'''
-    sendCommand(u"PERCENT: %s\n" % percentage)
+    sendCommand("PERCENT: %s\n" % percentage)
 
 
 def hideStopButton():
     '''Hides the stop button.'''
-    sendCommand(u"HIDESTOPBUTTON: \n")
+    sendCommand("HIDESTOPBUTTON: \n")
 
 
 def showStopButton():
     '''Shows the stop button.'''
-    sendCommand(u"SHOWSTOPBUTTON: \n")
+    sendCommand("SHOWSTOPBUTTON: \n")
 
 
 def disableStopButton():
     '''Disables (grays out) the stop button.'''
-    sendCommand(u"DISABLESTOPBUTTON: \n")
+    sendCommand("DISABLESTOPBUTTON: \n")
 
 
 def enableStopButton():
     '''Enables the stop button.'''
-    sendCommand(u"ENABLESTOPBUTTON: \n")
+    sendCommand("ENABLESTOPBUTTON: \n")
 
 
 def restartAlert():
     '''Tells MunkiStatus to display a restart alert.'''
     try:
-        sendCommand(u"ACTIVATE: \n")
-        sendCommand(u"RESTARTALERT: \n")
+        sendCommand("ACTIVATE: \n")
+        sendCommand("RESTARTALERT: \n")
         return readResponse()
     except IOError:
         return 0
@@ -203,7 +202,7 @@ def getStopButtonState():
     if not SOCK:
         return 0
     try:
-        SOCK.send(u"GETSTOPBUTTONSTATE: \n")
+        SOCK.send("GETSTOPBUTTONSTATE: \n")
         state = readResponse()
         if state:
             return state
@@ -217,7 +216,7 @@ def quit():
     '''Tells the status app that we're done.'''
     global SOCK
     try:
-        SOCK.send(u"QUIT: \n")
+        SOCK.send("QUIT: \n")
         SOCK.close()
         SOCK = None
     except (AttributeError, IOError):

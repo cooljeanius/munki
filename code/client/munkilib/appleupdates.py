@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# encoding: utf-8
 """
 appleupdates.py
 
@@ -33,10 +32,10 @@ from xml.dom import minidom
 
 from Foundation import NSDate
 from Foundation import CFPreferencesCopyAppValue
-#from Foundation import CFPreferencesCopyValue
+# from Foundation import CFPreferencesCopyValue
 from Foundation import CFPreferencesSetValue
 from Foundation import CFPreferencesAppSynchronize
-#from Foundation import kCFPreferencesAnyUser
+# from Foundation import kCFPreferencesAnyUser
 from Foundation import kCFPreferencesCurrentUser
 from Foundation import kCFPreferencesCurrentHost
 from LaunchServices import LSFindApplicationForInfo
@@ -92,7 +91,6 @@ LOCAL_DOWNLOAD_CATALOG_NAME = 'local_download.sucatalog'
 LOCAL_CATALOG_NAME = 'local_install.sucatalog'
 
 
-
 class Error(Exception):
     """Class for domain specific exceptions."""
 
@@ -125,7 +123,7 @@ class AppleUpdates(object):
             self.cache_dir, LOCAL_CATALOG_DIR_REL_PATH)
 
         self.apple_updates_plist = os.path.join(
-                self._managed_install_dir, 'AppleUpdates.plist')
+            self._managed_install_dir, 'AppleUpdates.plist')
         self.applicable_updates_plist = os.path.join(
             self.cache_dir, APPLICABLE_UPDATES)
 
@@ -192,10 +190,12 @@ class AppleUpdates(object):
             if rewrite_pkg_urls and 'URL' in package:
                 package['URL'] = self.RewriteURL(package['URL'])
             if 'MetadataURL' in package:
-                package['MetadataURL'] = self.RewriteURL(package['MetadataURL'])
+                package['MetadataURL'] = self.RewriteURL(
+                    package['MetadataURL'])
         distributions = product['Distributions']
         for dist_lang in distributions.keys():
-            distributions[dist_lang] = self.RewriteURL(distributions[dist_lang])
+            distributions[dist_lang] = self.RewriteURL(
+                distributions[dist_lang])
 
     def RewriteCatalogURLs(self, catalog, rewrite_pkg_urls=False):
         """Rewrites URLs in a catalog to point to our local replica.
@@ -259,11 +259,11 @@ class AppleUpdates(object):
             % (machine['munki_version'], darwin_version,
                machine['arch'], machine['machine_model']))
         return fetch.getResourceIfChangedAtomically(
-                                            url,
-                                            destinationpath,
-                                            custom_headers=[user_agent_header],
-                                            resume=resume,
-                                            follow_redirects=True)
+            url,
+            destinationpath,
+            custom_headers=[user_agent_header],
+            resume=resume,
+            follow_redirects=True)
 
     def CacheUpdateMetadata(self):
         """Copies ServerMetadata (.smd), Metadata (.pkm), and
@@ -322,7 +322,7 @@ class AppleUpdates(object):
         # rewrite all URLs, including pkgs, to point to local caches.
         self.RewriteCatalogURLs(catalog, rewrite_pkg_urls=True)
         FoundationPlist.writePlist(catalog, self.local_catalog_path)
-        
+
     def _GetPreferredLocalization(self, list_of_localizations):
         '''Picks the best localization from a list of available
         localizations.'''
@@ -340,17 +340,17 @@ class AppleUpdates(object):
                     list_of_localizations, None)
             if preferred_langs:
                 return preferred_langs[0]
-                
+
         # first fallback, return en or English
         if 'English' in list_of_localizations:
             return 'English'
         elif 'en' in list_of_localizations:
             return 'en'
-            
+
         # if we get this far, just return the first language
         # in the list of available languages
         return list_of_localizations[0]
-        
+
     def GetDistributionForProductKey(self, product_key):
         '''Returns the path to a distibution file from the local cache for the given
         product_key.'''
@@ -370,16 +370,16 @@ class AppleUpdates(object):
                     fileurl = fileurl[len('file://localhost'):]
                     return urllib2.unquote(fileurl)
         return None
-        
+
     def GetBlockingApps(self, product_key):
         '''Given a product key, finds the cached softwareupdate dist file, 
         then parses it, looking for must-close apps and converting them to
         Munki's blocking_applications'''
-        
+
         distfile = self.GetDistributionForProductKey(product_key)
         if not distfile:
             return []
-            
+
         dom = minidom.parse(distfile)
 
         must_close_app_ids = []
@@ -390,7 +390,7 @@ class AppleUpdates(object):
                 keys = app.attributes.keys()
                 if 'id' in keys:
                     must_close_app_ids.append(app.attributes['id'].value)
-        
+
         blocking_apps = []
         for id in must_close_app_ids:
             resultcode, fileref, nsurl = LSFindApplicationForInfo(
@@ -401,9 +401,9 @@ class AppleUpdates(object):
                 pathname = urllib2.unquote(fileurl).rstrip('/')
                 appname = os.path.basename(pathname)
                 blocking_apps.append(appname)
-                
+
         return blocking_apps
-        
+
     def _WriteFilteredCatalog(self, product_ids, catalog_path):
         """Write out a sucatalog containing only the updates in product_ids.
 
@@ -609,7 +609,7 @@ class AppleUpdates(object):
         Returns:
           Boolean. False if the checksums match, True if they differ."""
         cmd = ['/usr/sbin/pkgutil', '--regexp', '-pkg-info-plist',
-               'com\.apple\.*']
+               r'com\.apple\.*']
         proc = subprocess.Popen(cmd, shell=False, bufsize=1,
                                 stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -668,17 +668,19 @@ class AppleUpdates(object):
         except CatalogNotFoundError:
             return False
         except ReplicationError, err:
-            munkicommon.display_warning('Could not download Apple SUS catalog:')
+            munkicommon.display_warning(
+                'Could not download Apple SUS catalog:')
             munkicommon.display_warning('\t%s', str(err))
             return False
         except fetch.MunkiDownloadError:
-            munkicommon.display_warning('Could not download Apple SUS catalog.')
+            munkicommon.display_warning(
+                'Could not download Apple SUS catalog.')
             return False
 
         if not force_check and not self._IsForceCheckNeccessary(before_hash):
             munkicommon.display_info('Skipping Apple Software Update check '
-                'because sucatalog is unchanged, installed Apple packages are '
-                'unchanged and we recently did a full check.')
+                                     'because sucatalog is unchanged, installed Apple packages are '
+                                     'unchanged and we recently did a full check.')
             return False
 
         product_ids = self.GetAvailableUpdateProductIDs()
@@ -893,7 +895,7 @@ class AppleUpdates(object):
         while True:
             output = proc.stdout.readline().decode('UTF-8')
             if munkicommon.stopRequested():
-                os.kill(proc.pid, 15) #15 is SIGTERM
+                os.kill(proc.pid, 15)  # 15 is SIGTERM
                 break
             if not output and (proc.poll() != None):
                 break
@@ -929,7 +931,7 @@ class AppleUpdates(object):
         return retcode
 
     def _RunSoftwareUpdate(
-        self, options_list, stop_allowed=False, mode=None, results=None):
+            self, options_list, stop_allowed=False, mode=None, results=None):
         """Runs /usr/sbin/softwareupdate with options.
 
         Provides user feedback via command line or MunkiStatus.
@@ -954,7 +956,8 @@ class AppleUpdates(object):
         # Try to find our ptyexec tool
         # first look in the parent directory of this file's directory
         # (../)
-        parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        parent_dir = os.path.dirname(
+            os.path.dirname(os.path.abspath(__file__)))
         ptyexec_path = os.path.join(parent_dir, 'ptyexec')
         if not os.path.exists(ptyexec_path):
             # try absolute path in munki's normal install dir
@@ -1077,7 +1080,8 @@ class AppleUpdates(object):
         retcode = job.returncode()
         if retcode == 0:
             # get SoftwareUpdate's LastResultCode
-            last_result_code = self.GetSoftwareUpdatePref('LastResultCode') or 0
+            last_result_code = self.GetSoftwareUpdatePref(
+                'LastResultCode') or 0
             if last_result_code > 2:
                 retcode = last_result_code
 
@@ -1106,7 +1110,7 @@ class AppleUpdates(object):
             return False  # didn't do anything, so no restart needed
 
         installlist = self.GetSoftwareUpdateInfo()
-        installresults = {'installed':[], 'download':[]}
+        installresults = {'installed': [], 'download': []}
 
         catalog_url = 'file://localhost' + urllib2.quote(
             self.local_catalog_path)
@@ -1140,7 +1144,7 @@ class AppleUpdates(object):
                 install_status = 'FAILED for unknown reason'
                 munkicommon.display_warning(
                     'Apple update %s, %s failed to install. No record of '
-                    'success or failure.' % (rep['name'],rep['productKey']))
+                    'success or failure.' % (rep['name'], rep['productKey']))
 
             munkicommon.report['InstallResults'].append(rep)
             log_msg = message % (rep['name'], rep['version'], install_status)
@@ -1151,7 +1155,8 @@ class AppleUpdates(object):
         # clean up our now stale local cache
         if os.path.exists(self.cache_dir):
             # TODO(unassigned): change this to Pythonic delete.
-            unused_retcode = subprocess.call(['/bin/rm', '-rf', self.cache_dir])
+            unused_retcode = subprocess.call(
+                ['/bin/rm', '-rf', self.cache_dir])
         # remove the now invalid AppleUpdates.plist file.
         try:
             os.unlink(self.apple_updates_plist)
@@ -1169,7 +1174,7 @@ class AppleUpdates(object):
         return restartneeded
 
     def AppleSoftwareUpdatesAvailable(
-        self, force_check=False, suppress_check=False):
+            self, force_check=False, suppress_check=False):
         """Checks for available Apple Software Updates, trying not to hit the
         SUS more than needed.
 
@@ -1197,7 +1202,8 @@ class AppleUpdates(object):
                 'LastAppleSoftwareUpdateCheck')
             if last_su_check_string:
                 try:
-                    last_su_check = NSDate.dateWithString_(last_su_check_string)
+                    last_su_check = NSDate.dateWithString_(
+                        last_su_check_string)
                     # dateWithString_ returns None if invalid date string.
                     if not last_su_check:
                         raise ValueError
@@ -1228,8 +1234,8 @@ class AppleUpdates(object):
             'Getting list of available Apple Software Updates')
         cmd = ['/usr/sbin/softwareupdate', '-l']
         proc = subprocess.Popen(cmd, shell=False, bufsize=1,
-                               stdin=subprocess.PIPE,
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output, unused_err = proc.communicate()
         if proc.returncode == 0:
             updates = [str(item)[5:] for item in str(output).splitlines()
@@ -1240,9 +1246,7 @@ class AppleUpdates(object):
         return updates
 
 
-
 # Make the new appleupdates module easily dropped in with exposed funcs for now.
-
 apple_updates_object = None
 
 

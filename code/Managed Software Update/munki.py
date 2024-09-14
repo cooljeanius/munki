@@ -1,4 +1,3 @@
-# encoding: utf-8
 #
 #  munki.py
 #  Managed Software Update
@@ -99,12 +98,13 @@ def call(cmd):
     '''Convenience function; works around an issue with subprocess.call
     in PyObjC in Snow Leopard'''
     proc = subprocess.Popen(cmd, bufsize=1, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
+                            stderr=subprocess.PIPE)
     (output, err) = proc.communicate()
     return proc.returncode
 
 
 BUNDLE_ID = 'ManagedInstalls'
+
 
 def reload_prefs():
     """Uses CFPreferencesAppSynchronize(BUNDLE_ID)
@@ -145,7 +145,7 @@ def readSelfServiceManifest():
         # no working copy, look for system copy
         managedinstallbase = pref('ManagedInstallDir')
         SelfServeManifest = os.path.join(managedinstallbase, "manifests",
-                                            "SelfServeManifest")
+                                         "SelfServeManifest")
     if os.path.exists(SelfServeManifest):
         try:
             return FoundationPlist.readPlist(SelfServeManifest)
@@ -210,18 +210,18 @@ def earliestForceInstallDate():
     Returns None or earliest force_install_after_date converted to local time
     """
     earliest_date = None
-    
+
     installinfo = getInstallInfo()
-            
+
     for install in installinfo.get('managed_installs', []):
         this_force_install_date = install.get('force_install_after_date')
-        
+
         if this_force_install_date:
             this_force_install_date = discardTimeZoneFromDate(
                 this_force_install_date)
             if not earliest_date or this_force_install_date < earliest_date:
                 earliest_date = this_force_install_date
-            
+
     return earliest_date
 
 
@@ -301,13 +301,13 @@ def trimVersionString(version_string):
     version_parts = version_string.split('.')
     # strip off all trailing 0's in the version, while over 2 parts.
     while len(version_parts) > 2 and version_parts[-1] == '0':
-        del(version_parts[-1])
+        del (version_parts[-1])
     return '.'.join(version_parts)
 
 
 def getconsoleuser():
     from SystemConfiguration import SCDynamicStoreCopyConsoleUser
-    cfuser = SCDynamicStoreCopyConsoleUser( None, None, None )
+    cfuser = SCDynamicStoreCopyConsoleUser(None, None, None)
     return cfuser[0]
 
 
@@ -354,7 +354,7 @@ def logoutAndUpdate():
 
     try:
         if not os.path.exists(INSTALLATLOGOUTFILE):
-            open(INSTALLATLOGOUTFILE, 'w').close()    
+            open(INSTALLATLOGOUTFILE, 'w').close()
         logoutNow()
     except (OSError, IOError):
         return 1
@@ -382,7 +382,7 @@ def justUpdate():
         return 0
     except (OSError, IOError):
         return 1
-    
+
 
 def getRunningProcesses():
     """Returns a list of paths of running processes"""
@@ -425,7 +425,7 @@ def getRunningBlockingApps(appnames):
         if appname.endswith('.app'):
             # search by filename
             matching_items = [item for item in proc_list
-                              if '/'+ appname + '/' in item]
+                              if '/' + appname + '/' in item]
         else:
             # check executable name
             matching_items = [item for item in proc_list
@@ -456,7 +456,7 @@ def getPowerInfo():
     power_dict['TimeRemaining'] = -1
     cmd = ['/usr/bin/pmset', '-g', 'ps']
     proc = subprocess.Popen(cmd, bufsize=-1, stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
+                            stderr=subprocess.PIPE)
     (output, unused_error) = proc.communicate()
     if proc.returncode:
         # handle error
@@ -518,7 +518,7 @@ def setupLogging(username=None):
     global MSULOGENABLED
 
     if (logging.root.handlers and
-        logging.root.handlers[0].__class__ is FleetingFileHandler):
+            logging.root.handlers[0].__class__ is FleetingFileHandler):
         return
 
     if pref('MSULogEnabled'):
@@ -554,7 +554,7 @@ def setupLogging(username=None):
 
     while t < 10:
         try:
-            f = os.open(filename, os.O_RDWR|os.O_CREAT|os.O_NOFOLLOW, 0600)
+            f = os.open(filename, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0600)
             st = os.fstat(f)
             ours = stat.S_ISREG(st.st_mode) and st.st_uid == os.getuid()
             os.close(f)
