@@ -710,7 +710,7 @@ def runAdobeCS5AAMEEInstall(dmgpath):
         munkicommon.display_status_minor("Starting Adobe CS5 installer...")
         retcode = runAdobeInstallTool(cmd, number_of_payloads, killAdobeAIR=True)
         # now clean up our symlink hackfest
-        subprocess.call(["/bin/rm", "-rf", tmpdir])
+        unused_result = subprocess.call(["/bin/rm", "-rf", tmpdir])
     else:
         munkicommon.display_error(
             "%s doesn't appear to contain AdobeDeploymentManager"
@@ -742,7 +742,7 @@ def runAdobeCS5PatchInstaller(dmgpath, copylocal=False):
                 return -1
             # remove the dmg file to free up space, since we don't need it
             # any longer
-            subprocess.call(["/bin/rm", dmgpath])
+            unused_result = subprocess.call(["/bin/rm", dmgpath])
         else:
             updatedir = mountpoints[0]
 
@@ -762,7 +762,7 @@ def runAdobeCS5PatchInstaller(dmgpath, copylocal=False):
             retcode = -1
         if copylocal:
             # clean up our mess
-            subprocess.call(["/bin/rm", "-rf", updatedir])
+            unused_result = subprocess.call(["/bin/rm", "-rf", updatedir])
         else:
             munkicommon.unmountdmg(mountpoints[0])
         return retcode
