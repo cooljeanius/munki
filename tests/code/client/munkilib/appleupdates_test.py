@@ -120,7 +120,7 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testRewriteURL(self):
         """Tests RewriteURL()."""
         self.mox.StubOutWithMock(self.au, "_GetURLPath")
-        appleupdates.urllib2.quote(self.au.cache_dir)
+        _ = appleupdates.urllib2.quote(self.au.cache_dir)
         path = "/foo/bar/"
         url = "https://www.example.com" + path
         self.au._GetURLPath(url).AndReturn(path)
