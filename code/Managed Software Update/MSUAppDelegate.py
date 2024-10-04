@@ -91,7 +91,7 @@ class MSUAppDelegate(NSObject):
         )
 
         consoleuser = munki.getconsoleuser()
-        if consoleuser == None or consoleuser == "loginwindow":
+        if consoleuser is None or consoleuser == "loginwindow":
             # Status Window only
             NSMenu.setMenuBarVisible_(NO)
             self.munkiStatusController.startMunkiStatusSession()
@@ -167,7 +167,7 @@ class MSUAppDelegate(NSObject):
         consoleuser = munki.getconsoleuser()
         if (
             self.runmode == "MunkiStatus"
-            or consoleuser == None
+            or consoleuser is None
             or consoleuser == "loginwindow"
         ):
             # Status Window only, so we should just quit
@@ -451,7 +451,7 @@ class MSUAppDelegate(NSObject):
         table = []
         selfservedata = munki.readSelfServiceManifest()
         selfserve_installs = selfservedata.get("managed_installs", [])
-        selfserve_uninstalls = selfservedata.get("managed_uninstalls", [])
+        _ = selfservedata.get("managed_uninstalls", [])
 
         for item in self._optionalInstalls:
             row = {}
@@ -900,7 +900,7 @@ class MSUAppDelegate(NSObject):
         btn_pressed = self._force_warning_btns.get(returncode)
         if btn_pressed == self._force_warning_logout_btn:
             munki.log("user", "install_with_logout")
-            result = munki.logoutAndUpdate()
+            munki.logoutAndUpdate()
         elif btn_pressed == self._force_warning_ok_btn:
             munki.log("user", "dismissed_forced_logout_warning")
 

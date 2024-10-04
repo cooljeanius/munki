@@ -482,7 +482,7 @@ def runAdobeInstallTool(cmd, number_of_payloads=0, killAdobeAIR=False):
 
     old_payload_completed_count = 0
     payloadname = ""
-    while proc.poll() == None:
+    while proc.poll() is None:
         time.sleep(1)
         (payload_completed_count, payloadname) = getAdobeInstallProgressInfo(
             old_payload_completed_count, payloadname
@@ -966,7 +966,7 @@ def updateAcrobatPro(dmgpath):
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
         )
-        while proc.poll() == None:
+        while proc.poll() is None:
             time.sleep(1)
             # loginfo = getAcrobatPatchLogInfo(logfile_path)
             # if loginfo:

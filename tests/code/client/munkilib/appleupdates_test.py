@@ -120,7 +120,7 @@ class TestAppleUpdates(mox.MoxTestBase):
     def testRewriteURL(self):
         """Tests RewriteURL()."""
         self.mox.StubOutWithMock(self.au, "_GetURLPath")
-        managed_installs = appleupdates.urllib2.quote(self.au.cache_dir)
+        _ = appleupdates.urllib2.quote(self.au.cache_dir)
         path = "/foo/bar/"
         url = "https://www.example.com" + path
         self.au._GetURLPath(url).AndReturn(path)
@@ -1292,7 +1292,6 @@ class TestAppleUpdates(mox.MoxTestBase):
             }
         }
         self.au.GetSoftwareUpdateInfo().AndReturn(apple_updates)
-        exc = appleupdates.FoundationPlist.FoundationPlistException
         appleupdates.FoundationPlist.readPlist(index_plist).AndReturn(download_index)
         appleupdates.os.path.isdir(os.path.join("/Library/Updates", "path1")).AndReturn(
             True
@@ -1327,7 +1326,6 @@ class TestAppleUpdates(mox.MoxTestBase):
             }
         }
         self.au.GetSoftwareUpdateInfo().AndReturn(apple_updates)
-        exc = appleupdates.FoundationPlist.FoundationPlistException
         appleupdates.FoundationPlist.readPlist(index_plist).AndReturn(download_index)
         appleupdates.os.path.isdir(os.path.join("/Library/Updates", "path1")).AndReturn(
             True
@@ -1364,7 +1362,6 @@ class TestAppleUpdates(mox.MoxTestBase):
             }
         }
         self.au.GetSoftwareUpdateInfo().AndReturn(apple_updates)
-        exc = appleupdates.FoundationPlist.FoundationPlistException
         appleupdates.FoundationPlist.readPlist(index_plist).AndReturn(download_index)
         appleupdates.os.path.isdir(os.path.join("/Library/Updates", "path1")).AndReturn(
             True
