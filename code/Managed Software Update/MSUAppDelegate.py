@@ -451,7 +451,7 @@ class MSUAppDelegate(NSObject):
         table = []
         selfservedata = munki.readSelfServiceManifest()
         selfserve_installs = selfservedata.get("managed_installs", [])
-        selfservedata.get("managed_uninstalls", [])
+        _ = selfservedata.get("managed_uninstalls", [])
 
         for item in self._optionalInstalls:
             row = {}
